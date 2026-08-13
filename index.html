@@ -60,6 +60,18 @@
   .type-short{background:var(--short-bg);color:var(--short-text);}
   .type-unknown{background:var(--unknown-bg);color:var(--unknown);}
 
+  .timeline-controls{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 18px;margin-bottom:14px;}
+  .control-row{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
+  .range-slider-wrap{position:relative;height:22px;margin:4px 0;}
+  .range-slider-base-track{position:absolute;top:50%;left:0;right:0;height:4px;background:var(--line-soft);transform:translateY(-50%);border-radius:2px;}
+  .range-slider-fill{position:absolute;top:50%;height:4px;background:var(--gold);transform:translateY(-50%);border-radius:2px;}
+  .range-slider-wrap input[type=range]{position:absolute;top:50%;left:0;width:100%;transform:translateY(-50%);-webkit-appearance:none;appearance:none;background:transparent;margin:0;pointer-events:none;z-index:3;}
+  .range-slider-wrap input[type=range]:focus{z-index:5;outline:none;}
+  .range-slider-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:14px;height:14px;border-radius:50%;background:var(--gold-bright);border:2px solid var(--bg);cursor:grab;}
+  .range-slider-wrap input[type=range]::-webkit-slider-runnable-track{background:transparent;height:4px;}
+  .range-slider-wrap input[type=range]::-moz-range-thumb{pointer-events:auto;width:14px;height:14px;border-radius:50%;background:var(--gold-bright);border:2px solid var(--bg);cursor:grab;}
+  .range-slider-wrap input[type=range]::-moz-range-track{background:transparent;height:4px;}
+  .range-slider-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--cream-faint);font-family:var(--font-num);}
   .timeline-block{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px 18px 20px;margin-bottom:32px;overflow-x:auto;}
   .timeline-row{display:grid;grid-template-columns:150px 1fr;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--line-soft);cursor:pointer;}
   .timeline-row:last-child{border-bottom:none;}
@@ -151,6 +163,9 @@ let nextUpdateDate = null;
 let expandedName = null;
 let activeTab = 'list';
 let dataLoadError = null;
+let rangeStart = null;
+let rangeEnd = null;
+let foldRetired = true;
 function switchTab(tab){ activeTab = tab; render(); }
 
 function toUTC(iso){ return new Date(iso + 'T00:00:00Z'); }
@@ -163,6 +178,7 @@ function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
 function todayUTC(){ const n=new Date(); return new Date(Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate())); }
 function escapeHtml(str){ return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function escapeAttr(str){ return String(str).replace(/'/g, "\\'"); }
+function fmtISO(d){ return d.toISOString().slice(0,10); }
 
 async function fetchSets(){
   const res = await fetch('./data.json', {cache:'no-store'});
@@ -315,32 +331,45 @@ function overdueText(daysDiff){
 }
 function releaseDate(s){ return s.added ? toUTC(s.added) : new Date(0); }
 
-function renderFullTimeline(stats, refDate){
+function computeFullExtent(stats, refDate){
+  let minD = refDate, maxD = refDate;
+  sets.forEach(s=>{
+    const app=(s.appearances||[]).map(toUTC);
+    app.forEach(d=>{ if(d<minD) minD=d; if(d>maxD) maxD=d; });
+    if(!s.retired){
+      const p = predictSet(s, stats, refDate);
+      if(p.predicted<minD) minD=p.predicted;
+      if(p.predicted>maxD) maxD=p.predicted;
+    }
+  });
+  minD = new Date(minD.getTime()-20*DAY);
+  maxD = new Date(maxD.getTime()+20*DAY);
+  return {min:minD, max:maxD};
+}
+
+function renderFullTimeline(stats, refDate, ext, dispMin, dispMax){
   const active = sets.filter(s=>!s.retired).slice().sort((a,b)=>releaseDate(b)-releaseDate(a));
   const retired = sets.filter(s=>s.retired).slice().sort((a,b)=>releaseDate(b)-releaseDate(a));
   const all = active.concat(retired);
   if(all.length===0) return '<div style="color:var(--cream-dim);font-size:13px;padding:16px 0;">No sets yet.</div>';
 
   const scored = all.map(s=>({s, p:predictSet(s, stats, refDate), retired: !!s.retired}));
+  const manualRange = !!(rangeStart || rangeEnd);
+  const span = dispMax-dispMin;
+  const pct = d => ((d-dispMin)/span*100);
 
-  let minD = refDate, maxD = refDate;
-  scored.forEach(x=>{
+  function rowVisible(x){
+    if(!manualRange) return true;
     const app=(x.s.appearances||[]).map(toUTC);
-    app.forEach(d=>{ if(d<minD) minD=d; if(d>maxD) maxD=d; });
-    if(!x.retired){
-      if(x.p.predicted<minD) minD=x.p.predicted;
-      if(x.p.predicted>maxD) maxD=x.p.predicted;
-    }
-  });
-  minD = new Date(minD.getTime()-20*DAY);
-  maxD = new Date(maxD.getTime()+20*DAY);
-  const span = maxD-minD;
-  const pct = d => ((d-minD)/span*100);
+    if(app.some(d=>d>=dispMin && d<=dispMax)) return true;
+    if(!x.retired && x.p.predicted>=dispMin && x.p.predicted<=dispMax) return true;
+    return false;
+  }
 
   const yearStarts = [];
-  for(let y=minD.getUTCFullYear(); y<=maxD.getUTCFullYear(); y++){
+  for(let y=dispMin.getUTCFullYear(); y<=dispMax.getUTCFullYear(); y++){
     const yd = new Date(Date.UTC(y,0,1));
-    if(yd>=minD && yd<=maxD) yearStarts.push(yd);
+    if(yd>=dispMin && yd<=dispMax) yearStarts.push(yd);
   }
   const yearLines = yearStarts.map(yd=>`<div class="timeline-yearline" style="left:${pct(yd)}%"></div>`).join('');
 
@@ -365,7 +394,7 @@ function renderFullTimeline(stats, refDate){
     const s=x.s, p=x.p;
     const app=(s.appearances||[]).map(toUTC).sort((a,b)=>a-b);
     let dots = `<div class="axis-line"></div>${yearLines}`;
-    dots += `<div class="timeline-refline next-update" style="left:${pct(refDate)}%"></div>`;
+    dots += `<div class="timeline-refline next-update" style="left:${clamp(pct(refDate),0,100)}%"></div>`;
     if(app.length>1){
       const l1=clamp(pct(app[0]),0,100), l2=clamp(pct(app[app.length-1]),0,100);
       dots += `<div class="timeline-connector ${p.type}" style="left:${l1}%;width:${l2-l1}%"></div>`;
@@ -377,7 +406,9 @@ function renderFullTimeline(stats, refDate){
       }
     }
     app.forEach(d=>{
-      dots += `<div class="timeline-dot ${p.type}" style="left:${pct(d)}%" title="${fmtDisplay(d)}"></div>`;
+      const dp = pct(d);
+      if(dp<0 || dp>100) return;
+      dots += `<div class="timeline-dot ${p.type}" style="left:${dp}%" title="${fmtDisplay(d)}"></div>`;
     });
     if(!x.retired){
       dots += `<div class="timeline-dot predicted" style="left:${clamp(pct(p.predicted),0,100)}%" title="predicted: ${fmtDisplay(p.predicted)}"></div>`;
@@ -389,13 +420,27 @@ function renderFullTimeline(stats, refDate){
     ${expandedName===s.name ? `<div style="grid-column:1/-1;">${renderDetailPanel(s, p)}</div>` : ''}`;
   }
 
-  scored.filter(x=>!x.retired).forEach(x=>{ html += row(x); });
+  const visibleActive = scored.filter(x=>!x.retired).filter(rowVisible);
+  visibleActive.forEach(x=>{ html += row(x); });
+
   if(retired.length){
-    html += `<div class="timeline-divider">
-      <div class="divider-label">Retired &darr;</div>
-      <div class="divider-line"></div>
-    </div>`;
-    scored.filter(x=>x.retired).forEach(x=>{ html += row(x); });
+    if(foldRetired){
+      html += `<div class="timeline-divider">
+        <div class="divider-label">${retired.length} retired hidden</div>
+        <div class="divider-line"></div>
+      </div>`;
+    } else {
+      const visibleRetired = scored.filter(x=>x.retired).filter(rowVisible);
+      html += `<div class="timeline-divider">
+        <div class="divider-label">Retired &darr;${manualRange && visibleRetired.length!==retired.length ? ` (${visibleRetired.length} of ${retired.length} in range)` : ''}</div>
+        <div class="divider-line"></div>
+      </div>`;
+      visibleRetired.forEach(x=>{ html += row(x); });
+    }
+  }
+
+  if(manualRange && visibleActive.length===0 && (foldRetired || scored.filter(x=>x.retired).filter(rowVisible).length===0)){
+    html += `<div style="color:var(--cream-dim);font-size:13px;padding:10px 0;">No sets fall in this date range.</div>`;
   }
   return html;
 }
@@ -420,6 +465,7 @@ function render(){
   const top2 = rankedTop.slice(0,2);
   const chronological = scored.slice().sort((a,b)=>toUTC(a.s.added)-toUTC(b.s.added));
   const retiredCount = sets.filter(s=>s.retired).length;
+  let tlExt = null;
 
   let html = '';
   html += `<div id="status-msg" class="status-msg"></div>`;
@@ -443,9 +489,36 @@ function render(){
   </div>`;
 
   if(activeTab==='timeline'){
+    tlExt = computeFullExtent(stats, refDate);
+    const totalDays = Math.max(1, daysBetween(tlExt.min, tlExt.max));
+    const dispMin = rangeStart ? toUTC(rangeStart) : tlExt.min;
+    const dispMax = rangeEnd ? toUTC(rangeEnd) : tlExt.max;
+    const startOffset = clamp(daysBetween(tlExt.min, dispMin), 0, totalDays);
+    const endOffset = clamp(daysBetween(tlExt.min, dispMax), 0, totalDays);
+    const startPct = startOffset/totalDays*100, endPct = endOffset/totalDays*100;
+
     html += `<h2>Rotation timeline</h2>
-    <div class="hint" style="margin:-6px 0 14px;">Active sets first, newest release date on top; retired sets follow the divider, also newest release date first. Click a name for details.</div>
-    <div class="timeline-block">${renderFullTimeline(stats, refDate)}</div>`;
+    <div class="hint" style="margin:-6px 0 14px;">Active sets first, newest release date on top; retired sets follow the divider, also newest release date first. Click a name for details.</div>`;
+
+    html += `<div class="timeline-controls">
+      <div class="control-row">
+        <button class="small" onclick="toggleFoldRetired()">${foldRetired ? `Show ${retiredCount} retired sets` : 'Fold retired sets'}</button>
+        ${(rangeStart||rangeEnd) ? '<button class="small" onclick="resetRange()">Reset date range</button>' : ''}
+        <span class="hint">Drag the handles below to zoom the timeline to a date range.</span>
+      </div>
+      <div class="range-slider-wrap">
+        <div class="range-slider-base-track"></div>
+        <div class="range-slider-fill" id="range-fill" style="left:${startPct}%;width:${endPct-startPct}%"></div>
+        <input type="range" id="range-start-input" min="0" max="${totalDays}" step="1" value="${startOffset}" aria-label="Range start">
+        <input type="range" id="range-end-input" min="0" max="${totalDays}" step="1" value="${endOffset}" aria-label="Range end">
+      </div>
+      <div class="range-slider-labels">
+        <span id="range-start-label">${fmtDisplay(dispMin)}</span>
+        <span id="range-end-label">${fmtDisplay(dispMax)}</span>
+      </div>
+    </div>`;
+
+    html += `<div class="timeline-block">${renderFullTimeline(stats, refDate, tlExt, dispMin, dispMax)}</div>`;
   } else {
     html += `<h2>Most likely next two</h2>`;
     if(top2.length===0){
@@ -495,7 +568,46 @@ function render(){
   </div>`;
 
   document.getElementById('app').innerHTML = html;
+  if(activeTab==='timeline' && tlExt){ attachRangeSliderHandlers(tlExt.min, tlExt.max); }
 }
+
+function attachRangeSliderHandlers(fullMin, fullMax){
+  const totalDays = Math.max(1, daysBetween(fullMin, fullMax));
+  const startInput = document.getElementById('range-start-input');
+  const endInput = document.getElementById('range-end-input');
+  const fill = document.getElementById('range-fill');
+  const startLabel = document.getElementById('range-start-label');
+  const endLabel = document.getElementById('range-end-label');
+  if(!startInput || !endInput) return;
+
+  function offsetToDate(off){ return new Date(fullMin.getTime()+off*DAY); }
+
+  function liveUpdate(movedStart){
+    let s = parseInt(startInput.value,10), e = parseInt(endInput.value,10);
+    if(s>e){
+      if(movedStart){ e=s; endInput.value=e; } else { s=e; startInput.value=s; }
+    }
+    const sPct = s/totalDays*100, ePct = e/totalDays*100;
+    fill.style.left = sPct+'%';
+    fill.style.width = (ePct-sPct)+'%';
+    startLabel.textContent = fmtDisplay(offsetToDate(s));
+    endLabel.textContent = fmtDisplay(offsetToDate(e));
+  }
+  function commit(){
+    let s = parseInt(startInput.value,10), e = parseInt(endInput.value,10);
+    if(s>e){ const t=s; s=e; e=t; }
+    rangeStart = fmtISO(offsetToDate(s));
+    rangeEnd = fmtISO(offsetToDate(e));
+    render();
+  }
+  startInput.addEventListener('input', ()=>liveUpdate(true));
+  endInput.addEventListener('input', ()=>liveUpdate(false));
+  startInput.addEventListener('change', commit);
+  endInput.addEventListener('change', commit);
+}
+
+function resetRange(){ rangeStart=null; rangeEnd=null; render(); }
+function toggleFoldRetired(){ foldRetired=!foldRetired; render(); }
 
 function toggleExpand(name){ expandedName = (expandedName===name) ? null : name; render(); }
 
