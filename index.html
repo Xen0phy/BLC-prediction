@@ -681,7 +681,7 @@ function render(){
 
     html += `<div class="section-head"><h2>Full active roster</h2><span class="hint">oldest release date first — click a name for details</span></div>`;
     html += `<table class="roster"><thead><tr>
-      <th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th class="num">Est. next</th><th>Likelihood</th><th>Price (buy / sell)</th><th>Vintage</th>
+      <th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th class="num">Est. next</th><th>Likelihood</th><th>Price (buy / sell)</th>
     </tr></thead><tbody>`;
     chronological.forEach(x=>{
       const p=x.p, s=x.s;
@@ -693,21 +693,20 @@ function render(){
         <td class="num">${fmtDisplay(p.predicted)}</td>
         <td><div class="pct-bar-wrap"><div class="pct-bar-track"><div class="pct-bar-fill" style="width:${clamp(x.pct*4,2,100)}%"></div></div><span class="pct-num">${x.pct.toFixed(1)}%</span></div></td>
         <td class="price">${priceCellHtml(s.name)}</td>
-        <td>${vintageTag(s.vintage)}</td>
       </tr>
-      ${expandedName===s.name ? `<tr><td colspan="8">${renderDetailPanel(s,p)}</td></tr>` : ''}
+      ${expandedName===s.name ? `<tr><td colspan="7">${renderDetailPanel(s,p)}</td></tr>` : ''}
       `;
     });
     html += `</tbody></table>`;
 
     if(retiredCount){
       const vintageCount = sets.filter(s=>s.vintage).length;
-      html += `<div class="section-head" style="margin-top:32px;"><h2>Retired sets</h2><span class="hint">${listShowRetired?`historical release order — click a name for details${vintageCount?` · ${vintageCount} have gone vintage`:''}`:`${retiredCount} retired sets folded`}</span></div>`;
+      html += `<div class="section-head" style="margin-top:32px;"><h2>Retired sets</h2><span class="hint">${listShowRetired?`newest release date first — click a name for details${vintageCount?` · ${vintageCount} have gone vintage`:''}`:`${retiredCount} retired sets folded`}</span></div>`;
       html += `<div style="margin-bottom:14px;"><button class="small" onclick="toggleListRetired()">${listShowRetired?'Fold retired sets':`Show ${retiredCount} retired sets`}</button></div>`;
       if(listShowRetired){
         const retiredRows = sets.filter(s=>s.retired)
           .map(s=>({s, p:predictSet(s, stats, refDate)}))
-          .sort((a,b)=>toUTC(a.s.added)-toUTC(b.s.added));
+          .sort((a,b)=>toUTC(b.s.added)-toUTC(a.s.added));
         html += `<table class="roster"><thead><tr>
           <th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th>Price (buy / sell)</th><th>Vintage</th>
         </tr></thead><tbody>`;
