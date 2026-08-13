@@ -17,4 +17,3 @@ _price unavailable_
 
 [Open the full tool](https://xen0phy.github.io/BLC-prediction/) for the complete roster, retired sets, and timeline.
 <!-- MOST-LIKELY:END -->
-
