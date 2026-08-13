@@ -149,6 +149,11 @@
   td.num{font-family:var(--font-num);color:var(--cream-dim);}
   td.name{color:var(--cream);font-weight:500;cursor:pointer;}
   td.name:hover{color:var(--gold-bright);text-decoration:underline;}
+  th.check-col,td.check-col{width:30px;padding-right:0;text-align:center;}
+  td.check-col{cursor:pointer;}
+  input.collected-check{width:15px;height:15px;cursor:pointer;accent-color:var(--gold);vertical-align:middle;}
+  tr.is-collected td{opacity:0.5;}
+  tr.is-collected td.name{text-decoration:line-through;}
   .pct-bar-wrap{display:flex;align-items:center;gap:8px;}
   .pct-bar-track{flex:1;height:5px;background:var(--line-soft);border-radius:3px;overflow:hidden;min-width:50px;}
 
@@ -159,7 +164,9 @@
   .coin.dim{color:var(--cream-faint);}
   td.price{font-family:var(--font-num);font-size:12px;line-height:1.5;}
   td.price .lbl{color:var(--cream-faint);font-size:10px;text-transform:uppercase;letter-spacing:0.4px;margin-right:4px;}
-  .price-summary{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+  .price-summary{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;}
+  .price-summary-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:3px 0;}
+  .price-summary-row + .price-summary-row{border-top:1px solid var(--line-soft);margin-top:7px;padding-top:10px;}
   .price-summary .lbl{color:var(--cream-faint);text-transform:uppercase;font-size:10.5px;letter-spacing:0.5px;margin-right:6px;}
   .price-summary .note{color:var(--cream-faint);font-family:var(--font-body);}
   .price-incomplete{color:var(--unknown);font-size:10px;margin-left:4px;}
@@ -207,6 +214,7 @@
 
 <script>
 const REFDATE_KEY = 'blc-refdate';
+const COLLECTED_KEY = 'blc-collected';
 const CUTOFF = new Date('2021-11-09T00:00:00Z');
 const DAY = 86400000;
 let sets = [];
@@ -224,6 +232,7 @@ let pricesStatus = 'idle'; // idle | loading | loaded | error
 let pricesErrorMsg = null;
 let pricesUpdatedAt = null;
 let shamanStatus = 'idle'; // idle | loading | loaded | error
+let collectedSets = new Set();
 function switchTab(tab){ activeTab = tab; render(); }
 
 function toUTC(iso){ return new Date(iso + 'T00:00:00Z'); }
@@ -328,6 +337,23 @@ function saveRefDate(){
     if(nextUpdateDate) localStorage.setItem(REFDATE_KEY, nextUpdateDate);
     else localStorage.removeItem(REFDATE_KEY);
   }catch(e){ showStatus('Could not save the reference date locally (storage blocked).', true); }
+}
+function loadCollected(){
+  try{
+    const raw = localStorage.getItem(COLLECTED_KEY);
+    collectedSets = new Set(raw ? JSON.parse(raw) : []);
+  }catch(e){ collectedSets = new Set(); }
+}
+function saveCollected(){
+  try{ localStorage.setItem(COLLECTED_KEY, JSON.stringify(Array.from(collectedSets))); }
+  catch(e){ showStatus('Could not save collected sets locally (storage blocked).', true); }
+}
+function toggleCollected(name, evt){
+  if(evt) evt.stopPropagation();
+  if(collectedSets.has(name)) collectedSets.delete(name);
+  else collectedSets.add(name);
+  saveCollected();
+  render();
 }
 function showStatus(msg, isErr){
   const el = document.getElementById('status-msg');
@@ -718,22 +744,39 @@ function render(){
     }
 
     if(pricesStatus==='loaded'){
-      let buySum=0, sellSum=0;
-      chronological.forEach(x=>{ const p=prices[x.s.name]; if(p){ buySum+=p.buy; sellSum+=p.sell; } });
+      let activeBuy=0, activeSell=0;
+      chronological.forEach(x=>{
+        if(collectedSets.has(x.s.name)) return;
+        const p=prices[x.s.name]; if(p){ activeBuy+=p.buy; activeSell+=p.sell; }
+      });
+      let allBuy=0, allSell=0;
+      sets.forEach(s=>{
+        if(collectedSets.has(s.name)) return;
+        const p=prices[s.name]; if(p){ allBuy+=p.buy; allSell+=p.sell; }
+      });
+      const collectedNote = collectedSets.size ? ` — ${collectedSets.size} collected set${collectedSets.size!==1?'s':''} excluded` : '';
       html += `<div class="price-summary">
-        <span><span class="lbl">Roster buy total</span>${coinHtml(buySum)}</span>
-        <span><span class="lbl">Roster sell total</span>${coinHtml(sellSum)}</span>
-        <span class="note">live from the GW2 API${pricesUpdatedAt?', updated '+pricesUpdatedAt.toLocaleTimeString():''} — sum of buy-order and sell-listing prices across all skins in each active set.</span>
+        <div class="price-summary-row">
+          <span><span class="lbl">Active roster buy</span>${coinHtml(activeBuy)}</span>
+          <span><span class="lbl">Active roster sell</span>${coinHtml(activeSell)}</span>
+        </div>
+        <div class="price-summary-row">
+          <span><span class="lbl">All sets buy</span>${coinHtml(allBuy)}</span>
+          <span><span class="lbl">All sets sell</span>${coinHtml(allSell)}</span>
+        </div>
+        <span class="note">live from the GW2 API${pricesUpdatedAt?', updated '+pricesUpdatedAt.toLocaleTimeString():''} — sum of buy-order and sell-listing prices across all skins in each set${collectedNote}. Check off sets below as you collect them to remove them from these totals.</span>
       </div>`;
     }
 
     html += `<div class="section-head"><h2>Full active roster</h2><span class="hint">oldest release date first — click a name for details</span></div>`;
     html += `<table class="roster"><thead><tr>
-      <th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th class="num">Est. next</th><th>Likelihood</th><th>Price (buy / sell)</th>
+      <th class="check-col"></th><th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th class="num">Est. next</th><th>Likelihood</th><th>Price (buy / sell)</th>
     </tr></thead><tbody>`;
     chronological.forEach(x=>{
       const p=x.p, s=x.s;
-      html += `<tr>
+      const isCollected = collectedSets.has(s.name);
+      html += `<tr class="${isCollected?'is-collected':''}">
+        <td class="check-col" onclick="toggleCollected('${escapeAttr(s.name)}', event)"><input type="checkbox" class="collected-check" ${isCollected?'checked':''} onclick="toggleCollected('${escapeAttr(s.name)}', event)" title="Mark as collected"></td>
         <td class="name" onclick="toggleExpand('${escapeAttr(s.name)}')">${escapeHtml(s.name)}</td>
         <td>${typeTag(p.type)}</td>
         <td class="num">${p.count}</td>
@@ -742,7 +785,7 @@ function render(){
         <td><div class="pct-bar-wrap"><div class="pct-bar-track"><div class="pct-bar-fill type-${p.type}" style="width:${clamp(x.barPct,2,100)}%"></div></div><span class="pct-num type-${p.type}">${x.pct.toFixed(1)}%</span></div></td>
         <td class="price">${priceCellHtml(s.name)}</td>
       </tr>
-      ${expandedName===s.name ? `<tr><td colspan="7">${renderDetailPanel(s,p)}</td></tr>` : ''}
+      ${expandedName===s.name ? `<tr><td colspan="8">${renderDetailPanel(s,p)}</td></tr>` : ''}
       `;
     });
     html += `</tbody></table>`;
@@ -758,11 +801,13 @@ function render(){
           .map(s=>({s, p:predictSet(s, stats, refDate)}))
           .sort((a,b)=>toUTC(b.s.added)-toUTC(a.s.added));
         html += `<table class="roster"><thead><tr>
-          <th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th>Price (buy / sell)</th><th>Vintage</th>
+          <th class="check-col"></th><th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th>Price (buy / sell)</th><th>Vintage</th>
         </tr></thead><tbody>`;
         retiredRows.forEach(x=>{
           const p=x.p, s=x.s;
-          html += `<tr>
+          const isCollected = collectedSets.has(s.name);
+          html += `<tr class="${isCollected?'is-collected':''}">
+            <td class="check-col" onclick="toggleCollected('${escapeAttr(s.name)}', event)"><input type="checkbox" class="collected-check" ${isCollected?'checked':''} onclick="toggleCollected('${escapeAttr(s.name)}', event)" title="Mark as collected"></td>
             <td class="name" onclick="toggleExpand('${escapeAttr(s.name)}')">${escapeHtml(s.name)}</td>
             <td>${typeTag(p.type)}</td>
             <td class="num">${p.count}</td>
@@ -770,7 +815,7 @@ function render(){
             <td class="price">${priceCellHtml(s.name)}</td>
             <td>${vintageTag(s.vintage)}</td>
           </tr>
-          ${expandedName===s.name ? `<tr><td colspan="6">${renderDetailPanel(s,p)}</td></tr>` : ''}
+          ${expandedName===s.name ? `<tr><td colspan="7">${renderDetailPanel(s,p)}</td></tr>` : ''}
           `;
         });
         html += `</tbody></table>`;
@@ -873,6 +918,7 @@ async function refreshData(){
 
 (async function init(){
   loadRefDate(); // cached fallback in case the live fetch below fails
+  loadCollected();
   await loadSets();
   await loadSkinIds();
   render();
