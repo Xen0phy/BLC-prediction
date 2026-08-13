@@ -9,8 +9,10 @@
     --line:#3a3d40; --line-soft:#2b2e30;
     --gold:#c9973f; --gold-bright:#e3b45f;
     --cream:#e9e1cf; --cream-dim:#a89e88; --cream-faint:#756c5a;
-    --long:#c9793f; --long-bg:#2c1c12; --long-text:#e39a76;
-    --short:#4fae94; --short-bg:#132621; --short-text:#8fd6c1;
+    --long:#006900; --long-bg:#0e2113; --long-text:#6fcf7a;
+    --short:#c99a1f; --short-bg:#332a10; --short-text:#f0c85e;
+    --status-ok-bg:#132621; --status-ok-text:#9fdcc9;
+    --status-err-bg:#2c1c12; --status-err-text:#e8ab8d;
     --unknown:#8b7d55; --unknown-bg:#2a2618;
     --danger:#a5402f;
     --vintage:#a37fc9; --vintage-bg:#241a30; --vintage-text:#cdb3ea;
@@ -66,6 +68,8 @@
   .predict-rank{font-family:var(--font-num);font-size:11px;color:var(--cream-faint);text-transform:uppercase;letter-spacing:1.5px;}
   .predict-name{font-family:var(--font-display);font-size:21px;color:var(--cream);margin:4px 0 8px;}
   .predict-pct{font-family:var(--font-num);font-size:30px;color:var(--gold-bright);line-height:1;}
+  .slot-short .predict-pct{color:var(--short-text);}
+  .slot-long .predict-pct{color:var(--long-text);}
   .predict-pct span{font-size:14px;color:var(--cream-faint);}
   .predict-meta{margin-top:10px;font-size:12px;color:var(--cream-dim);line-height:1.6;}
   .predict-meta b{color:var(--cream);font-weight:600;}
@@ -150,7 +154,11 @@
   .price-summary .note{color:var(--cream-faint);font-family:var(--font-body);}
   .price-incomplete{color:var(--unknown);font-size:10px;margin-left:4px;}
   .pct-bar-fill{height:100%;background:var(--gold);}
+  .pct-bar-fill.type-long{background:var(--long);}
+  .pct-bar-fill.type-short{background:var(--short);}
   .pct-num{font-family:var(--font-num);font-size:12px;color:var(--gold-bright);min-width:34px;text-align:right;}
+  .pct-num.type-long{color:var(--long-text);}
+  .pct-num.type-short{color:var(--short-text);}
 
   .detail-panel{background:var(--panel2);border:1px solid var(--line);border-radius:6px;margin:6px 0 16px;padding:14px 16px;font-size:12.5px;}
   .detail-panel .detail-row{display:flex;gap:22px;flex-wrap:wrap;margin-bottom:10px;color:var(--cream-dim);}
@@ -165,8 +173,8 @@
   .footnote{font-size:11.5px;color:var(--cream-faint);line-height:1.6;margin-top:6px;}
   .status-msg{font-size:12px;padding:8px 10px;border-radius:4px;margin-bottom:14px;display:none;}
   .status-msg.show{display:block;}
-  .status-ok{background:var(--short-bg);color:#9fdcc9;}
-  .status-err{background:var(--long-bg);color:#e8ab8d;}
+  .status-ok{background:var(--status-ok-bg);color:var(--status-ok-text);}
+  .status-err{background:var(--status-err-bg);color:var(--status-err-text);}
   .loading{padding:60px 0;text-align:center;color:var(--cream-faint);font-size:13px;}
 </style>
 </head>
@@ -414,8 +422,8 @@ function buildPredictions(){
 }
 
 function typeTag(type){
-  if(type==='long') return '<span class="type-tag type-long">long</span>';
-  if(type==='short') return '<span class="type-tag type-short">short</span>';
+  if(type==='long') return '<span class="type-tag type-long">Uncommon</span>';
+  if(type==='short') return '<span class="type-tag type-short">Rare</span>';
   return '<span class="type-tag type-unknown">unknown</span>';
 }
 
@@ -527,8 +535,8 @@ function renderFullTimeline(stats, refDate, ext, dispMin, dispMax){
   html += `<div class="timeline-header">
     <div></div>
     <div class="legend">
-      <span class="legend-item"><span class="legend-dot" style="background:var(--long)"></span>long</span>
-      <span class="legend-item"><span class="legend-dot" style="background:var(--short)"></span>short</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--long)"></span>Uncommon</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--short)"></span>Rare</span>
       <span class="legend-item"><span class="legend-dot" style="background:var(--unknown)"></span>unknown</span>
       <span class="legend-item"><span style="width:8px;height:8px;border-radius:50%;border:1.5px dashed var(--gold-bright);display:inline-block;"></span>predicted next</span>
       <span class="legend-item"><span style="width:8px;height:8px;background:var(--vintage);display:inline-block;transform:rotate(45deg);"></span>went vintage</span>
@@ -606,7 +614,7 @@ function renderDetailPanel(s, p){
     <div class="detail-row">
       <span>Release date: <b>${s.added?fmtDisplay(toUTC(s.added)):'—'}</b></span>
       <span>Status: <b>${s.retired?'Retired':'Active'}</b></span>
-      <span>Type: <b>${p?p.type:(s.type||'unknown')}</b>${s.type?' (set in data.json)':' (not set — treated as unknown)'}</span>
+      <span>Type: <b>${(()=>{const t=p?p.type:(s.type||'unknown'); return t==='long'?'Uncommon':t==='short'?'Rare':'unknown';})()}</b>${s.type?' (set in data.json)':' (not set — treated as unknown)'}</span>
       <span>Vintage: <b>${s.vintage?fmtDisplay(toUTC(s.vintage)):'Not vintage'}</b></span>
     </div>
     <div class="chip-list">${chips}</div>
@@ -681,13 +689,13 @@ function render(){
     html += `<div class="timeline-block">${renderFullTimeline(stats, refDate, tlExt, dispMin, dispMax)}</div>`;
   } else {
     html += `<h2>Next rotation — by slot</h2>
-    <div class="hint" style="margin:-6px 0 14px;">Only one long-type set and one short-type set occupy the chest at a time, so each slot's odds are ranked against its own type only.</div>`;
+    <div class="hint" style="margin:-6px 0 14px;">Only one Uncommon set and one Rare set occupy the chest at a time, so each slot's odds are ranked against its own slot only.</div>`;
     if(shortRanked.length===0 && longRanked.length===0){
       html += `<div style="color:var(--cream-dim);font-size:13px;padding:16px 0;">No active sets in data.json.</div>`;
     } else {
       html += `<div class="predict-grid">`;
-      html += slotCard('short', 'Rare slot — Short', shortRanked);
-      html += slotCard('long', 'Uncommon slot — Long', longRanked);
+      html += slotCard('short', 'Rare slot', shortRanked);
+      html += slotCard('long', 'Uncommon slot', longRanked);
       html += `</div>`;
     }
 
@@ -713,7 +721,7 @@ function render(){
         <td class="num">${p.count}</td>
         <td class="num">${p.lastDate?fmtDisplay(p.lastDate):'—'}</td>
         <td class="num">${fmtDisplay(p.predicted)}</td>
-        <td><div class="pct-bar-wrap"><div class="pct-bar-track"><div class="pct-bar-fill" style="width:${clamp(x.pct*4,2,100)}%"></div></div><span class="pct-num">${x.pct.toFixed(1)}%</span></div></td>
+        <td><div class="pct-bar-wrap"><div class="pct-bar-track"><div class="pct-bar-fill type-${p.type}" style="width:${clamp(x.pct*4,2,100)}%"></div></div><span class="pct-num type-${p.type}">${x.pct.toFixed(1)}%</span></div></td>
         <td class="price">${priceCellHtml(s.name)}</td>
       </tr>
       ${expandedName===s.name ? `<tr><td colspan="7">${renderDetailPanel(s,p)}</td></tr>` : ''}
@@ -751,7 +759,7 @@ function render(){
   }
 
   html += `<div class="footnote" style="margin-top:24px;">
-    Each set's rotation type (long or short) comes from the <code>"type"</code> field in <code>data.json</code>. Long sets average ~${Math.round(stats.longMean)}d between appearances and short sets ~${Math.round(stats.shortMean)}d, both recomputed live from typed sets' actual gaps. Sets without a <code>"type"</code> in the file are treated as unknown and predicted using a blend of both. Appearances before 9 Nov 2021 predate the current system and are excluded from the gap statistics. Likelihood reflects how close the reference date is to each set's projected next appearance relative to normal variance for its type — it doesn't factor in how many times a set has already appeared toward its typical retirement, so use the appearance count to judge that yourself.
+    Each set's rotation slot — Uncommon or Rare — comes from the <code>"type"</code> field in <code>data.json</code> (<code>"long"</code>/<code>"short"</code> internally). Uncommon sets average ~${Math.round(stats.longMean)}d between appearances and Rare sets ~${Math.round(stats.shortMean)}d, both recomputed live from typed sets' actual gaps. Sets without a <code>"type"</code> in the file are treated as unknown and predicted using a blend of both, and are excluded from the slot rankings above since they can't be assigned to either. Appearances before 9 Nov 2021 predate the current system and are excluded from the gap statistics. Likelihood reflects how close the reference date is to each set's projected next appearance relative to its slot peers — it doesn't factor in how many times a set has already appeared toward its typical retirement, so use the appearance count to judge that yourself.
     <br><br>
     <code>data.json</code> is the only source of truth — this page is read-only and reloads it fresh (no caching) every time it loads or you hit "Refresh data.json". The only thing saved in your browser is the reference date above.
   </div>`;
