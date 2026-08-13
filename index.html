@@ -603,8 +603,9 @@ function render(){
   if(activeTab==='timeline'){
     tlExt = computeFullExtent(stats, refDate);
     const totalDays = Math.max(1, daysBetween(tlExt.min, tlExt.max));
-    const dispMin = rangeStart ? toUTC(rangeStart) : tlExt.min;
-    const dispMax = rangeEnd ? toUTC(rangeEnd) : tlExt.max;
+    const defaultExt = foldRetired ? computeVisibleExtent(stats, refDate) : tlExt;
+    const dispMin = rangeStart ? toUTC(rangeStart) : defaultExt.min;
+    const dispMax = rangeEnd ? toUTC(rangeEnd) : defaultExt.max;
     const startOffset = clamp(daysBetween(tlExt.min, dispMin), 0, totalDays);
     const endOffset = clamp(daysBetween(tlExt.min, dispMax), 0, totalDays);
     const startPct = startOffset/totalDays*100, endPct = endOffset/totalDays*100;
