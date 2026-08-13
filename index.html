@@ -180,6 +180,7 @@ let dataLoadError = null;
 let rangeStart = null;
 let rangeEnd = null;
 let foldRetired = true;
+let listShowRetired = false;
 let skinIds = {};
 let prices = {};
 let pricesStatus = 'idle'; // idle | loading | loaded | error
@@ -674,6 +675,32 @@ function render(){
       `;
     });
     html += `</tbody></table>`;
+
+    if(retiredCount){
+      html += `<div class="section-head" style="margin-top:32px;"><h2>Retired sets</h2><span class="hint">${listShowRetired?`historical release order — click a name for details`:`${retiredCount} retired sets folded`}</span></div>`;
+      html += `<div style="margin-bottom:14px;"><button class="small" onclick="toggleListRetired()">${listShowRetired?'Fold retired sets':`Show ${retiredCount} retired sets`}</button></div>`;
+      if(listShowRetired){
+        const retiredRows = sets.filter(s=>s.retired)
+          .map(s=>({s, p:predictSet(s, stats, refDate)}))
+          .sort((a,b)=>toUTC(a.s.added)-toUTC(b.s.added));
+        html += `<table class="roster"><thead><tr>
+          <th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th>Price (buy / sell)</th>
+        </tr></thead><tbody>`;
+        retiredRows.forEach(x=>{
+          const p=x.p, s=x.s;
+          html += `<tr>
+            <td class="name" onclick="toggleExpand('${escapeAttr(s.name)}')">${escapeHtml(s.name)}</td>
+            <td>${typeTag(p.type)}</td>
+            <td class="num">${p.count}</td>
+            <td class="num">${p.lastDate?fmtDisplay(p.lastDate):'—'}</td>
+            <td class="price">${priceCellHtml(s.name)}</td>
+          </tr>
+          ${expandedName===s.name ? `<tr><td colspan="5">${renderDetailPanel(s,p)}</td></tr>` : ''}
+          `;
+        });
+        html += `</tbody></table>`;
+      }
+    }
   }
 
   html += `<div class="footnote" style="margin-top:24px;">
@@ -741,6 +768,7 @@ function priceCellHtml(name){
 }
 
 function toggleExpand(name){ expandedName = (expandedName===name) ? null : name; render(); }
+function toggleListRetired(){ listShowRetired = !listShowRetired; render(); }
 
 function setNextUpdate(val){
   nextUpdateDate = val || null;
