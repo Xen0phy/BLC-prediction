@@ -1,0 +1,47 @@
+name: Update README predictions
+
+on:
+  schedule:
+    # Runs daily at 06:00 UTC. GW2 prices/rotation don't change fast enough
+    # to need more than this, but bump it or add more triggers if you want.
+    - cron: '0 6 * * *'
+  workflow_dispatch: {}   # lets you trigger it manually from the Actions tab
+  push:
+    branches: [main]
+    paths:
+      - data.json
+      - skin-ids.json
+      - index.html
+
+permissions:
+  contents: write
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Regenerate README
+        run: node generate-readme.js
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet README.md; then
+            echo "No changes to README.md"
+          else
+            git add README.md
+            git commit -m "Update README predictions [skip ci]"
+            git push
+          fi
