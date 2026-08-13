@@ -50,6 +50,19 @@
   @media (max-width:640px){.predict-grid{grid-template-columns:1fr;}}
   .predict-card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px 20px;position:relative;}
   .predict-card::before{content:"";position:absolute;top:0;left:0;width:3px;height:100%;background:var(--gold);}
+  .predict-card.slot-short::before{background:var(--short);}
+  .predict-card.slot-long::before{background:var(--long);}
+  .slot-label{font-family:var(--font-num);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;display:flex;align-items:center;gap:7px;}
+  .slot-label .dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
+  .slot-short .slot-label{color:var(--short-text);}
+  .slot-short .slot-label .dot{background:var(--short);}
+  .slot-long .slot-label{color:var(--long-text);}
+  .slot-long .slot-label .dot{background:var(--long);}
+  .slot-queue{margin-top:14px;padding-top:12px;border-top:1px solid var(--line-soft);}
+  .slot-queue-title{font-size:10.5px;text-transform:uppercase;letter-spacing:0.8px;color:var(--cream-faint);margin-bottom:6px;}
+  .slot-queue-item{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--cream-dim);padding:3px 0;}
+  .slot-queue-item b{color:var(--cream);font-weight:500;}
+  .slot-queue-item .q-pct{font-family:var(--font-num);color:var(--cream-faint);white-space:nowrap;}
   .predict-rank{font-family:var(--font-num);font-size:11px;color:var(--cream-faint);text-transform:uppercase;letter-spacing:1.5px;}
   .predict-name{font-family:var(--font-display);font-size:21px;color:var(--cream);margin:4px 0 8px;}
   .predict-pct{font-family:var(--font-num);font-size:30px;color:var(--gold-bright);line-height:1;}
@@ -388,8 +401,15 @@ function buildPredictions(){
   const refDate = getRefDate();
   const active = sets.filter(s=>!s.retired);
   const scored = active.map(s=>({s, p:predictSet(s, stats, refDate)}));
-  const totalScore = scored.reduce((a,b)=>a+b.p.score,0)||1;
-  scored.forEach(x=>x.pct = x.p.score/totalScore*100);
+  // Only one long-type and one short-type set occupies the chest at a time (Uncommon / Rare
+  // slots respectively), so normalize each type's candidates against its own peers rather than
+  // pooling long and short together — otherwise pct doesn't reflect "chance this wins its slot".
+  ['long','short'].forEach(t=>{
+    const pool = scored.filter(x=>x.p.type===t);
+    const totalScore = pool.reduce((a,b)=>a+b.p.score,0)||1;
+    pool.forEach(x=>x.pct = x.p.score/totalScore*100);
+  });
+  scored.filter(x=>x.p.type!=='long' && x.p.type!=='short').forEach(x=>x.pct = 0);
   return {scored, stats, refDate};
 }
 
@@ -397,6 +417,32 @@ function typeTag(type){
   if(type==='long') return '<span class="type-tag type-long">long</span>';
   if(type==='short') return '<span class="type-tag type-short">short</span>';
   return '<span class="type-tag type-unknown">unknown</span>';
+}
+
+function slotCard(typeKey, label, ranked){
+  if(ranked.length===0){
+    return `<div class="predict-card slot-${typeKey}">
+      <div class="slot-label"><span class="dot"></span>${label}</div>
+      <div style="color:var(--cream-dim);font-size:13px;padding:12px 0 4px;">No active ${typeKey} sets in data.json.</div>
+    </div>`;
+  }
+  const top = ranked[0];
+  const runnersUp = ranked.slice(1,4);
+  return `<div class="predict-card slot-${typeKey}">
+    <div class="slot-label"><span class="dot"></span>${label}</div>
+    <div class="predict-name">${escapeHtml(top.s.name)}</div>
+    <div class="predict-pct">${top.pct.toFixed(1)}<span> %</span></div>
+    <div class="predict-meta">
+      ${top.p.count} appearance${top.p.count!==1?'s':''} so far<br>
+      Last seen: <b>${top.p.lastDate?fmtDisplay(top.p.lastDate):'—'}</b><br>
+      Estimated next: <b>${fmtDisplay(top.p.predicted)}</b> (${overdueText(top.p.daysDiff)})<br>
+      Set price: ${priceCellHtml(top.s.name)}
+    </div>
+    ${runnersUp.length ? `<div class="slot-queue">
+      <div class="slot-queue-title">Next in line for this slot</div>
+      ${runnersUp.map((x,i)=>`<div class="slot-queue-item"><b>${i+2}. ${escapeHtml(x.s.name)}</b><span class="q-pct">${x.pct.toFixed(1)}%</span></div>`).join('')}
+    </div>` : ''}
+  </div>`;
 }
 function vintageTag(vintageStr){
   if(!vintageStr) return '<span class="vintage-dash">—</span>';
@@ -570,8 +616,8 @@ function renderDetailPanel(s, p){
 function render(){
   const refDate = getRefDate();
   const {scored, stats} = buildPredictions();
-  const rankedTop = scored.slice().sort((a,b)=>b.pct-a.pct);
-  const top2 = rankedTop.slice(0,2);
+  const shortRanked = scored.filter(x=>x.p.type==='short').sort((a,b)=>b.pct-a.pct);
+  const longRanked = scored.filter(x=>x.p.type==='long').sort((a,b)=>b.pct-a.pct);
   const chronological = scored.slice().sort((a,b)=>toUTC(a.s.added)-toUTC(b.s.added));
   const retiredCount = sets.filter(s=>s.retired).length;
   let tlExt = null;
@@ -634,25 +680,14 @@ function render(){
 
     html += `<div class="timeline-block">${renderFullTimeline(stats, refDate, tlExt, dispMin, dispMax)}</div>`;
   } else {
-    html += `<h2>Most likely next two</h2>`;
-    if(top2.length===0){
+    html += `<h2>Next rotation — by slot</h2>
+    <div class="hint" style="margin:-6px 0 14px;">Only one long-type set and one short-type set occupy the chest at a time, so each slot's odds are ranked against its own type only.</div>`;
+    if(shortRanked.length===0 && longRanked.length===0){
       html += `<div style="color:var(--cream-dim);font-size:13px;padding:16px 0;">No active sets in data.json.</div>`;
     } else {
       html += `<div class="predict-grid">`;
-      top2.forEach((x,i)=>{
-        const p=x.p, s=x.s;
-        html += `<div class="predict-card">
-          <div class="predict-rank">Prediction ${i+1}</div>
-          <div class="predict-name">${escapeHtml(s.name)}</div>
-          <div class="predict-pct">${x.pct.toFixed(1)}<span> %</span></div>
-          <div class="predict-meta">
-            ${typeTag(p.type)} &nbsp; ${p.count} appearance${p.count!==1?'s':''} so far<br>
-            Last seen: <b>${p.lastDate?fmtDisplay(p.lastDate):'—'}</b><br>
-            Estimated next: <b>${fmtDisplay(p.predicted)}</b> (${overdueText(p.daysDiff)})<br>
-            Set price: ${priceCellHtml(s.name)}
-          </div>
-        </div>`;
-      });
+      html += slotCard('short', 'Rare slot — Short', shortRanked);
+      html += slotCard('long', 'Uncommon slot — Long', longRanked);
       html += `</div>`;
     }
 
