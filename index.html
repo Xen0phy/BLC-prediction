@@ -62,15 +62,17 @@
 
   .timeline-controls{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 18px;margin-bottom:14px;}
   .control-row{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
-  .range-slider-wrap{position:relative;height:22px;margin:4px 0;}
+  .range-slider-wrap{position:relative;height:30px;margin:6px 0;}
   .range-slider-base-track{position:absolute;top:50%;left:0;right:0;height:4px;background:var(--line-soft);transform:translateY(-50%);border-radius:2px;}
   .range-slider-fill{position:absolute;top:50%;height:4px;background:var(--gold);transform:translateY(-50%);border-radius:2px;}
-  .range-slider-wrap input[type=range]{position:absolute;top:50%;left:0;width:100%;transform:translateY(-50%);-webkit-appearance:none;appearance:none;background:transparent;margin:0;pointer-events:none;z-index:3;}
+  .range-slider-wrap input[type=range]{position:absolute;top:50%;left:0;width:100%;height:26px;transform:translateY(-50%);-webkit-appearance:none;appearance:none;background:transparent;margin:0;pointer-events:none;z-index:3;}
   .range-slider-wrap input[type=range]:focus{z-index:5;outline:none;}
-  .range-slider-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:14px;height:14px;border-radius:50%;background:var(--gold-bright);border:2px solid var(--bg);cursor:grab;}
+  .range-slider-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:8px;height:26px;border-radius:3px;background:var(--gold-bright);border:1.5px solid var(--bg);cursor:grab;margin-top:-11px;}
   .range-slider-wrap input[type=range]::-webkit-slider-runnable-track{background:transparent;height:4px;}
-  .range-slider-wrap input[type=range]::-moz-range-thumb{pointer-events:auto;width:14px;height:14px;border-radius:50%;background:var(--gold-bright);border:2px solid var(--bg);cursor:grab;}
+  .range-slider-wrap input[type=range]::-moz-range-thumb{pointer-events:auto;width:8px;height:26px;border-radius:3px;background:var(--gold-bright);border:1.5px solid var(--bg);cursor:grab;}
   .range-slider-wrap input[type=range]::-moz-range-track{background:transparent;height:4px;}
+  .range-slider-wrap input[type=range]:active::-webkit-slider-thumb{background:var(--gold);cursor:grabbing;}
+  .range-slider-wrap input[type=range]:active::-moz-range-thumb{background:var(--gold);cursor:grabbing;}
   .range-slider-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--cream-faint);font-family:var(--font-num);}
   .timeline-block{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px 18px 20px;margin-bottom:32px;overflow-x:auto;}
   .timeline-row{display:grid;grid-template-columns:150px 1fr;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--line-soft);cursor:pointer;}
@@ -347,6 +349,24 @@ function computeFullExtent(stats, refDate){
   return {min:minD, max:maxD};
 }
 
+function computeVisibleExtent(stats, refDate){
+  const relevant = foldRetired ? sets.filter(s=>!s.retired) : sets;
+  if(relevant.length===0) return computeFullExtent(stats, refDate);
+  let minD = refDate, maxD = refDate;
+  relevant.forEach(s=>{
+    const app=(s.appearances||[]).map(toUTC);
+    app.forEach(d=>{ if(d<minD) minD=d; if(d>maxD) maxD=d; });
+    if(!s.retired){
+      const p = predictSet(s, stats, refDate);
+      if(p.predicted<minD) minD=p.predicted;
+      if(p.predicted>maxD) maxD=p.predicted;
+    }
+  });
+  minD = new Date(minD.getTime()-20*DAY);
+  maxD = new Date(maxD.getTime()+20*DAY);
+  return {min:minD, max:maxD};
+}
+
 function renderFullTimeline(stats, refDate, ext, dispMin, dispMax){
   const active = sets.filter(s=>!s.retired).slice().sort((a,b)=>releaseDate(b)-releaseDate(a));
   const retired = sets.filter(s=>s.retired).slice().sort((a,b)=>releaseDate(b)-releaseDate(a));
@@ -503,6 +523,7 @@ function render(){
     html += `<div class="timeline-controls">
       <div class="control-row">
         <button class="small" onclick="toggleFoldRetired()">${foldRetired ? `Show ${retiredCount} retired sets` : 'Fold retired sets'}</button>
+        <button class="small" onclick="fitRangeToVisible()">Fit range to ${foldRetired && retiredCount ? 'active sets' : 'visible'}</button>
         ${(rangeStart||rangeEnd) ? '<button class="small" onclick="resetRange()">Reset date range</button>' : ''}
         <span class="hint">Drag the handles below to zoom the timeline to a date range.</span>
       </div>
@@ -608,6 +629,14 @@ function attachRangeSliderHandlers(fullMin, fullMax){
 
 function resetRange(){ rangeStart=null; rangeEnd=null; render(); }
 function toggleFoldRetired(){ foldRetired=!foldRetired; render(); }
+function fitRangeToVisible(){
+  const refDate = getRefDate();
+  const stats = computeGlobalStats();
+  const ext = computeVisibleExtent(stats, refDate);
+  rangeStart = fmtISO(ext.min);
+  rangeEnd = fmtISO(ext.max);
+  render();
+}
 
 function toggleExpand(name){ expandedName = (expandedName===name) ? null : name; render(); }
 
