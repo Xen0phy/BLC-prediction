@@ -5,8 +5,8 @@
 <title>Black Lion Chest — Rotation Predictor</title>
 <style>
   :root{
-    --bg:#14110d; --panel:#1c1812; --panel2:#231d15;
-    --line:#3a3122; --line-soft:#2a2419;
+    --bg:#17181a; --panel:#1d1f21; --panel2:#24272a;
+    --line:#3a3d40; --line-soft:#2b2e30;
     --gold:#c9973f; --gold-bright:#e3b45f;
     --cream:#e9e1cf; --cream-dim:#a89e88; --cream-faint:#756c5a;
     --long:#c9793f; --long-bg:#2c1c12; --long-text:#e39a76;
@@ -30,6 +30,7 @@
   .ref-bar .field{display:flex;align-items:center;gap:6px;}
   .ref-bar label{color:var(--cream-dim);}
   .ref-bar input{background:var(--panel2);border:1px solid var(--line);color:var(--cream);border-radius:4px;padding:5px 8px;font-size:12.5px;}
+  .ref-bar .ref-date-value{background:var(--panel2);border:1px solid var(--line);color:var(--cream);border-radius:4px;padding:5px 10px;font-size:12.5px;font-family:var(--font-num);}
   .ref-bar .note{color:var(--cream-faint);font-family:var(--font-num);}
 
   h2{font-family:var(--font-display);font-weight:400;font-size:18px;color:var(--gold);margin:0 0 12px;}
@@ -191,6 +192,7 @@ let prices = {};
 let pricesStatus = 'idle'; // idle | loading | loaded | error
 let pricesErrorMsg = null;
 let pricesUpdatedAt = null;
+let shamanStatus = 'idle'; // idle | loading | loaded | error
 function switchTab(tab){ activeTab = tab; render(); }
 
 function toUTC(iso){ return new Date(iso + 'T00:00:00Z'); }
@@ -304,18 +306,6 @@ function showStatus(msg, isErr){
   setTimeout(()=>el.classList.remove('show'), 3500);
 }
 
-const PATTERN_ANCHOR_NAME = 'Endless Ocean';
-const PATTERN_SEQUENCE = ['short','long','long'];
-function patternType(s){
-  if(!s || !s.added) return null;
-  const sorted = sets.filter(x=>x.added).slice().sort((a,b)=>toUTC(a.added)-toUTC(b.added));
-  const anchorIdx = sorted.findIndex(x=>x.name===PATTERN_ANCHOR_NAME);
-  if(anchorIdx===-1) return null;
-  const idx = sorted.findIndex(x=>x.name===s.name);
-  if(idx===-1 || idx<anchorIdx) return null;
-  return PATTERN_SEQUENCE[(idx-anchorIdx)%3];
-}
-
 function computeGlobalStats(){
   const longGaps=[], shortGaps=[];
   let longCount=0, shortCount=0;
@@ -328,16 +318,14 @@ function computeGlobalStats(){
       const d=daysBetween(added, app[0]);
       if(d>0 && app[0]>=CUTOFF){
         debutDays.push(d);
-        const dt = s.type || patternType(s);
-        if(dt==='long' || dt==='short') debutDaysByType[dt].push(d);
+        if(s.type==='long' || s.type==='short') debutDaysByType[s.type].push(d);
       }
     }
     if(app.length<2) continue;
     if(app[0]<CUTOFF) continue;
     const gaps=[]; for(let i=1;i<app.length;i++) gaps.push(daysBetween(app[i-1],app[i]));
-    let t = s.type || patternType(s);
-    if(!t){ t = mean(gaps)>250 ? 'long' : 'short'; }
-    if(t==='long'){ longGaps.push(...gaps); longCount++; } else { shortGaps.push(...gaps); shortCount++; }
+    if(s.type==='long'){ longGaps.push(...gaps); longCount++; }
+    else if(s.type==='short'){ shortGaps.push(...gaps); shortCount++; }
   }
   const longMean = longGaps.length? mean(longGaps):353;
   const longStd = Math.max(20, longGaps.length>3? stdev(longGaps):28);
@@ -359,7 +347,7 @@ function predictSet(s, stats, refDate){
   const app=(s.appearances||[]).map(toUTC).sort((a,b)=>a-b);
   if(app.length===0){
     const added=toUTC(s.added);
-    const type = s.type || patternType(s) || 'unknown';
+    const type = s.type || 'unknown';
     let dMean=stats.debutMean, dStd=stats.debutStd;
     if(type==='long'){ dMean=stats.debutLongMean; dStd=stats.debutLongStd; }
     else if(type==='short'){ dMean=stats.debutShortMean; dStd=stats.debutShortStd; }
@@ -369,12 +357,11 @@ function predictSet(s, stats, refDate){
   }
   const last=app[app.length-1];
   if(app.length===1){
-    let type = s.type || patternType(s);
+    let type = s.type || 'unknown';
     let predicted, std;
     if(type==='long'){ predicted=new Date(last.getTime()+stats.longMean*DAY); std=stats.longStd; }
     else if(type==='short'){ predicted=new Date(last.getTime()+stats.shortMean*DAY); std=stats.shortStd; }
     else{
-      type='unknown';
       const blendGap = stats.priorLong*stats.longMean+stats.priorShort*stats.shortMean;
       std = Math.sqrt(stats.priorLong*stats.longStd**2+stats.priorShort*stats.shortStd**2);
       predicted = new Date(last.getTime()+blendGap*DAY);
@@ -384,9 +371,9 @@ function predictSet(s, stats, refDate){
   }
   const gaps=[]; for(let i=1;i<app.length;i++) gaps.push(daysBetween(app[i-1],app[i]));
   const ownAvg=mean(gaps);
-  let type = s.type || patternType(s) || (ownAvg>250?'long':'short');
-  const typeMean = type==='long'?stats.longMean:stats.shortMean;
-  const typeStd = type==='long'?stats.longStd:stats.shortStd;
+  const type = s.type || 'unknown';
+  const typeMean = type==='long' ? stats.longMean : type==='short' ? stats.shortMean : (stats.priorLong*stats.longMean+stats.priorShort*stats.shortMean);
+  const typeStd = type==='long' ? stats.longStd : type==='short' ? stats.shortStd : Math.sqrt(stats.priorLong*stats.longStd**2+stats.priorShort*stats.shortStd**2);
   const ownWeight = clamp(gaps.length/3,0,1);
   const expectedGap = ownWeight*ownAvg+(1-ownWeight)*typeMean;
   const predicted=new Date(last.getTime()+expectedGap*DAY);
@@ -573,7 +560,7 @@ function renderDetailPanel(s, p){
     <div class="detail-row">
       <span>Release date: <b>${s.added?fmtDisplay(toUTC(s.added)):'—'}</b></span>
       <span>Status: <b>${s.retired?'Retired':'Active'}</b></span>
-      <span>Type: <b>${p?p.type:(s.type||'unknown')}</b>${s.type?' (set in data.json)':(patternType(s)?' (from rotation pattern)':' (inferred)')}</span>
+      <span>Type: <b>${p?p.type:(s.type||'unknown')}</b>${s.type?' (set in data.json)':' (not set — treated as unknown)'}</span>
       <span>Vintage: <b>${s.vintage?fmtDisplay(toUTC(s.vintage)):'Not vintage'}</b></span>
     </div>
     <div class="chip-list">${chips}</div>
@@ -594,13 +581,12 @@ function render(){
 
   html += `<div class="ref-bar">
     <div class="field"><label>Reference date</label>
-      <input type="date" id="next-update-input" value="${nextUpdateDate||''}" onchange="setNextUpdate(this.value)">
+      <span class="ref-date-value">${nextUpdateDate? fmtDisplay(toUTC(nextUpdateDate)) : fmtDisplay(todayUTC())}</span>
     </div>
-    <button class="small" id="fetch-shaman-btn" onclick="fetchNextUpdateFromShaman()">Fetch from thatshaman.com</button>
+    <button class="small" id="fetch-shaman-btn" onclick="fetchNextUpdateFromShaman()" ${shamanStatus==='loading'?'disabled':''}>${shamanStatus==='loading'?'Fetching…':'Refresh from thatshaman.com'}</button>
     <button class="small" onclick="refreshData()">Refresh data.json</button>
     <button class="small" id="fetch-prices-btn" onclick="loadPrices()" ${pricesStatus==='loading'?'disabled':''}>${pricesStatus==='loading'?'Fetching prices…':(pricesStatus==='loaded'?'Refresh prices':'Load live prices')}</button>
-    <span class="note">${nextUpdateDate? 'Predictions use the date you set — clear it to fall back to today.' : `Using today (${fmtDisplay(todayUTC())}). Set the known next update date above if you already know it.`}</span>
-    ${nextUpdateDate? '<button class="small" onclick="setNextUpdate(\'\')">Clear</button>' : ''}
+    <span class="note">${shamanStatus==='error' ? "Could not reach thatshaman.com — falling back to today's date. Try refreshing." : (nextUpdateDate? 'Next update date, auto-fetched from thatshaman.com.' : 'Using today — thatshaman.com has no upcoming date posted yet.')}</span>
   </div>`;
   if(pricesStatus==='error'){
     html += `<div class="status-msg show status-err" style="position:static;margin-bottom:14px;">Could not load prices from the GW2 API (${escapeHtml(pricesErrorMsg)}). The API is usually reachable directly from a browser — try again, or check your connection.</div>`;
@@ -729,7 +715,7 @@ function render(){
   }
 
   html += `<div class="footnote" style="margin-top:24px;">
-    Sets from Endless Ocean onward (by release order) follow a known short-long-long rotation (~${Math.round(stats.shortMean)}d / ~${Math.round(stats.longMean)}d between appearances, recomputed live) unless <code>data.json</code> sets a <code>"type"</code> explicitly for a given set. Sets before Endless Ocean, and appearances before 9 Nov 2021, predate the current system and are left unclassified unless typed in the file. Likelihood reflects how close the reference date is to each set's projected next appearance relative to normal variance for its type — it doesn't factor in how many times a set has already appeared toward its typical retirement, so use the appearance count to judge that yourself.
+    Each set's rotation type (long or short) comes from the <code>"type"</code> field in <code>data.json</code>. Long sets average ~${Math.round(stats.longMean)}d between appearances and short sets ~${Math.round(stats.shortMean)}d, both recomputed live from typed sets' actual gaps. Sets without a <code>"type"</code> in the file are treated as unknown and predicted using a blend of both. Appearances before 9 Nov 2021 predate the current system and are excluded from the gap statistics. Likelihood reflects how close the reference date is to each set's projected next appearance relative to normal variance for its type — it doesn't factor in how many times a set has already appeared toward its typical retirement, so use the appearance count to judge that yourself.
     <br><br>
     <code>data.json</code> is the only source of truth — this page is read-only and reloads it fresh (no caching) every time it loads or you hit "Refresh data.json". The only thing saved in your browser is the reference date above.
   </div>`;
@@ -795,16 +781,9 @@ function priceCellHtml(name){
 function toggleExpand(name){ expandedName = (expandedName===name) ? null : name; render(); }
 function toggleListRetired(){ listShowRetired = !listShowRetired; render(); }
 
-function setNextUpdate(val){
-  nextUpdateDate = val || null;
-  saveRefDate();
-  render();
-}
-
 async function fetchNextUpdateFromShaman(){
-  const btn = document.getElementById('fetch-shaman-btn');
-  const origText = btn ? btn.textContent : '';
-  if(btn){ btn.disabled = true; btn.textContent = 'Fetching…'; }
+  shamanStatus = 'loading';
+  render();
   try{
     const res = await fetch('https://thatshaman.com/tools/countdown/?format=json');
     if(!res.ok) throw new Error('bad response');
@@ -813,12 +792,13 @@ async function fetchNextUpdateFromShaman(){
     const iso = String(data.when).slice(0,10);
     nextUpdateDate = iso;
     saveRefDate();
+    shamanStatus = 'loaded';
     showStatus(`Reference date set to ${iso} from thatshaman.com${data.confirmed===false?' (unconfirmed)':''}.`, false);
-    render();
   }catch(e){
-    showStatus('Could not fetch from thatshaman.com automatically — your browser may be blocking the cross-site request. Check thatshaman.com/tools/countdown and enter the date manually.', true);
-    if(btn){ btn.disabled = false; btn.textContent = origText; }
+    shamanStatus = 'error';
+    showStatus('Could not reach thatshaman.com automatically — your browser may be blocking the cross-site request. Falling back to today\'s date; try the refresh button again in a moment.', true);
   }
+  render();
 }
 
 async function refreshData(){
@@ -828,11 +808,12 @@ async function refreshData(){
 }
 
 (async function init(){
-  loadRefDate();
+  loadRefDate(); // cached fallback in case the live fetch below fails
   await loadSets();
   await loadSkinIds();
   render();
   loadPrices();
+  fetchNextUpdateFromShaman(); // always try to get the live date on load
 })();
 </script>
 </body>
