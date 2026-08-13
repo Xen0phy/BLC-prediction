@@ -118,6 +118,18 @@
   td.name:hover{color:var(--gold-bright);text-decoration:underline;}
   .pct-bar-wrap{display:flex;align-items:center;gap:8px;}
   .pct-bar-track{flex:1;height:5px;background:var(--line-soft);border-radius:3px;overflow:hidden;min-width:50px;}
+
+  .coin{font-family:var(--font-num);white-space:nowrap;}
+  .coin .g{color:var(--gold-bright);}
+  .coin .s{color:#c9c9c9;}
+  .coin .c{color:#c9793f;}
+  .coin.dim{color:var(--cream-faint);}
+  td.price{font-family:var(--font-num);font-size:12px;line-height:1.5;}
+  td.price .lbl{color:var(--cream-faint);font-size:10px;text-transform:uppercase;letter-spacing:0.4px;margin-right:4px;}
+  .price-summary{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+  .price-summary .lbl{color:var(--cream-faint);text-transform:uppercase;font-size:10.5px;letter-spacing:0.5px;margin-right:6px;}
+  .price-summary .note{color:var(--cream-faint);font-family:var(--font-body);}
+  .price-incomplete{color:var(--unknown);font-size:10px;margin-left:4px;}
   .pct-bar-fill{height:100%;background:var(--gold);}
   .pct-num{font-family:var(--font-num);font-size:12px;color:var(--gold-bright);min-width:34px;text-align:right;}
 
@@ -168,6 +180,11 @@ let dataLoadError = null;
 let rangeStart = null;
 let rangeEnd = null;
 let foldRetired = true;
+let skinIds = {};
+let prices = {};
+let pricesStatus = 'idle'; // idle | loading | loaded | error
+let pricesErrorMsg = null;
+let pricesUpdatedAt = null;
 function switchTab(tab){ activeTab = tab; render(); }
 
 function toUTC(iso){ return new Date(iso + 'T00:00:00Z'); }
@@ -200,6 +217,67 @@ async function loadSets(){
     dataLoadError = e.message || 'fetch failed';
     sets = [];
   }
+}
+
+async function fetchSkinIds(){
+  const res = await fetch('./skin-ids.json', {cache:'no-store'});
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  return await res.json();
+}
+
+async function loadSkinIds(){
+  try{ skinIds = await fetchSkinIds(); }
+  catch(e){ skinIds = {}; }
+}
+
+function copperToParts(copper){
+  copper = Math.round(copper||0);
+  const g = Math.floor(copper/10000);
+  const s = Math.floor((copper%10000)/100);
+  const c = copper%100;
+  return {g,s,c};
+}
+function coinHtml(copper){
+  const {g,s,c} = copperToParts(copper);
+  return `<span class="coin"><span class="g">${g}g</span> <span class="s">${s}s</span> <span class="c">${c}c</span></span>`;
+}
+
+async function loadPrices(){
+  if(pricesStatus==='loading') return;
+  pricesStatus = 'loading';
+  pricesErrorMsg = null;
+  render();
+  try{
+    const allIds = Array.from(new Set(Object.values(skinIds).flat()));
+    if(allIds.length===0) throw new Error('no skin IDs loaded (skin-ids.json missing or empty)');
+    const priceMap = {};
+    const chunkSize = 150;
+    for(let i=0;i<allIds.length;i+=chunkSize){
+      const chunk = allIds.slice(i, i+chunkSize);
+      const res = await fetch(`https://api.guildwars2.com/v2/commerce/prices?ids=${chunk.join(',')}`);
+      if(res.status===404){ continue; } // none in this chunk are currently listed
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const data = await res.json();
+      data.forEach(d=>{ priceMap[d.id] = d; });
+    }
+    const result = {};
+    Object.entries(skinIds).forEach(([name, ids])=>{
+      let buy=0, sell=0, missing=0;
+      ids.forEach(id=>{
+        const d = priceMap[id];
+        if(d && d.buys){ buy += d.buys.unit_price; } else { missing++; }
+        if(d && d.sells){ sell += d.sells.unit_price; } else { missing++; }
+      });
+      result[name] = {buy, sell, missing, count: ids.length};
+    });
+    prices = result;
+    pricesStatus = 'loaded';
+    pricesUpdatedAt = new Date();
+  }catch(e){
+    pricesStatus = 'error';
+    pricesErrorMsg = e.message || 'fetch failed';
+  }
+  render();
 }
 
 function loadRefDate(){
@@ -496,9 +574,13 @@ function render(){
     </div>
     <button class="small" id="fetch-shaman-btn" onclick="fetchNextUpdateFromShaman()">Fetch from thatshaman.com</button>
     <button class="small" onclick="refreshData()">Refresh data.json</button>
+    <button class="small" id="fetch-prices-btn" onclick="loadPrices()" ${pricesStatus==='loading'?'disabled':''}>${pricesStatus==='loading'?'Fetching prices…':(pricesStatus==='loaded'?'Refresh prices':'Load live prices')}</button>
     <span class="note">${nextUpdateDate? 'Predictions use the date you set — clear it to fall back to today.' : `Using today (${fmtDisplay(todayUTC())}). Set the known next update date above if you already know it.`}</span>
     ${nextUpdateDate? '<button class="small" onclick="setNextUpdate(\'\')">Clear</button>' : ''}
   </div>`;
+  if(pricesStatus==='error'){
+    html += `<div class="status-msg show status-err" style="position:static;margin-bottom:14px;">Could not load prices from the GW2 API (${escapeHtml(pricesErrorMsg)}). The API is usually reachable directly from a browser — try again, or check your connection.</div>`;
+  }
   if(dataLoadError){
     html += `<div class="status-msg show status-err" style="position:static;margin-bottom:20px;">Could not load data.json (${escapeHtml(dataLoadError)}). Make sure it sits next to index.html and the page is served over http/https, not opened directly as a file.</div>`;
   }
@@ -555,16 +637,27 @@ function render(){
           <div class="predict-meta">
             ${typeTag(p.type)} &nbsp; ${p.count} appearance${p.count!==1?'s':''} so far<br>
             Last seen: <b>${p.lastDate?fmtDisplay(p.lastDate):'—'}</b><br>
-            Estimated next: <b>${fmtDisplay(p.predicted)}</b> (${overdueText(p.daysDiff)})
+            Estimated next: <b>${fmtDisplay(p.predicted)}</b> (${overdueText(p.daysDiff)})<br>
+            Set price: ${priceCellHtml(s.name)}
           </div>
         </div>`;
       });
       html += `</div>`;
     }
 
+    if(pricesStatus==='loaded'){
+      let buySum=0, sellSum=0;
+      chronological.forEach(x=>{ const p=prices[x.s.name]; if(p){ buySum+=p.buy; sellSum+=p.sell; } });
+      html += `<div class="price-summary">
+        <span><span class="lbl">Roster buy total</span>${coinHtml(buySum)}</span>
+        <span><span class="lbl">Roster sell total</span>${coinHtml(sellSum)}</span>
+        <span class="note">live from the GW2 API${pricesUpdatedAt?', updated '+pricesUpdatedAt.toLocaleTimeString():''} — sum of buy-order and sell-listing prices across all skins in each active set.</span>
+      </div>`;
+    }
+
     html += `<div class="section-head"><h2>Full active roster</h2><span class="hint">oldest release date first — click a name for details</span></div>`;
     html += `<table class="roster"><thead><tr>
-      <th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th class="num">Est. next</th><th>Likelihood</th>
+      <th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th class="num">Est. next</th><th>Likelihood</th><th>Price (buy / sell)</th>
     </tr></thead><tbody>`;
     chronological.forEach(x=>{
       const p=x.p, s=x.s;
@@ -575,8 +668,9 @@ function render(){
         <td class="num">${p.lastDate?fmtDisplay(p.lastDate):'—'}</td>
         <td class="num">${fmtDisplay(p.predicted)}</td>
         <td><div class="pct-bar-wrap"><div class="pct-bar-track"><div class="pct-bar-fill" style="width:${clamp(x.pct*4,2,100)}%"></div></div><span class="pct-num">${x.pct.toFixed(1)}%</span></div></td>
+        <td class="price">${priceCellHtml(s.name)}</td>
       </tr>
-      ${expandedName===s.name ? `<tr><td colspan="6">${renderDetailPanel(s,p)}</td></tr>` : ''}
+      ${expandedName===s.name ? `<tr><td colspan="7">${renderDetailPanel(s,p)}</td></tr>` : ''}
       `;
     });
     html += `</tbody></table>`;
@@ -638,6 +732,14 @@ function fitRangeToVisible(){
   render();
 }
 
+function priceCellHtml(name){
+  if(pricesStatus==='loading') return `<span class="coin dim">loading…</span>`;
+  const p = prices[name];
+  if(!p) return `<span class="coin dim">—</span>`;
+  const warn = p.missing ? `<span class="price-incomplete" title="${p.missing} of ${p.count*2} listings missing for this set">partial</span>` : '';
+  return `<span class="lbl">Buy</span>${coinHtml(p.buy)}${warn}<br><span class="lbl">Sell</span>${coinHtml(p.sell)}`;
+}
+
 function toggleExpand(name){ expandedName = (expandedName===name) ? null : name; render(); }
 
 function setNextUpdate(val){
@@ -675,7 +777,9 @@ async function refreshData(){
 (async function init(){
   loadRefDate();
   await loadSets();
+  await loadSkinIds();
   render();
+  loadPrices();
 })();
 </script>
 </body>
