@@ -102,7 +102,7 @@ async function main() {
 
   top2.forEach((x, i) => {
     const priceLine = (x.buy != null && x.sell != null)
-      ? `Buy total: **${copperToStr(x.buy)}** &nbsp;·&nbsp; Sell total: **${copperToStr(x.sell)}**${x.missing ? ' _(partial — some skins unlisted)_' : ''}`
+      ? `<br>Buy total: **${copperToStr(x.buy)}** &nbsp;·&nbsp; Sell total: **${copperToStr(x.sell)}**${x.missing ? ' _(partial — some skins unlisted)_' : ''}`
       : '_price unavailable_';
     section += `**${i + 1}. ${x.name}** — ${x.pct.toFixed(1)}% (${x.type})\n`;
     section += `Last seen: ${fmtDate(x.lastDate)} · Estimated next: ${fmtDate(x.predicted)} (${overdue(x.daysDiff)})\n`;
