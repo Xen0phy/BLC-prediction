@@ -165,11 +165,18 @@
   .coin.dim{color:var(--cream-faint);}
   td.price{font-family:var(--font-num);font-size:12px;line-height:1.5;}
   td.price .lbl{color:var(--cream-faint);font-size:10px;text-transform:uppercase;letter-spacing:0.4px;margin-right:4px;}
-  .price-summary{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;}
-  .price-summary-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:3px 0;}
-  .price-summary-row + .price-summary-row{border-top:1px solid var(--line-soft);margin-top:7px;padding-top:10px;}
-  .price-summary .lbl{color:var(--cream-faint);text-transform:uppercase;font-size:10.5px;letter-spacing:0.5px;margin-right:6px;}
-  .price-summary .note{color:var(--cream-faint);font-family:var(--font-body);}
+  .price-summary{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;margin-bottom:14px;font-size:12.5px;}
+  .price-summary-grid{display:grid;grid-template-columns:1fr 1fr 2fr;gap:20px;}
+  @media (max-width:640px){.price-summary-grid{grid-template-columns:1fr;gap:12px;}}
+  .ps-col{display:flex;flex-direction:column;gap:3px;border-left:2px solid var(--line-soft);padding-left:10px;}
+  .ps-col:first-child{border-left:none;padding-left:0;}
+  .ps-col-cheapest{justify-content:center;}
+  .ps-title{font-size:10.5px;text-transform:uppercase;letter-spacing:0.6px;color:var(--gold);margin-bottom:2px;}
+  .ps-line{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+  .ps-lbl{color:var(--cream-faint);text-transform:uppercase;font-size:10.5px;letter-spacing:0.5px;min-width:78px;}
+  .ps-col-cheapest .ps-lbl{min-width:88px;}
+  .ps-col-cheapest b{color:var(--cream);font-weight:500;}
+  .price-summary .note{color:var(--cream-faint);font-family:var(--font-body);display:block;margin-top:10px;padding-top:9px;border-top:1px solid var(--line-soft);}
   .price-incomplete{color:var(--unknown);font-size:10px;margin-left:4px;}
   .pct-bar-fill{height:100%;background:var(--gold);}
   .pct-bar-fill.type-long{background:var(--long);}
@@ -751,21 +758,33 @@ function render(){
         const p=prices[x.s.name]; if(p){ activeBuy+=p.buy; activeSell+=p.sell; }
       });
       let allBuy=0, allSell=0;
+      let cheapestBuy=null, cheapestSell=null;
       sets.forEach(s=>{
         if(collectedSets.has(s.name)) return;
-        const p=prices[s.name]; if(p){ allBuy+=p.buy; allSell+=p.sell; }
+        const p=prices[s.name]; if(!p) return;
+        allBuy+=p.buy; allSell+=p.sell;
+        if(p.buy>0 && (!cheapestBuy || p.buy<cheapestBuy.val)) cheapestBuy={name:s.name, val:p.buy};
+        if(p.sell>0 && (!cheapestSell || p.sell<cheapestSell.val)) cheapestSell={name:s.name, val:p.sell};
       });
       const collectedNote = collectedSets.size ? ` — ${collectedSets.size} collected set${collectedSets.size!==1?'s':''} excluded` : '';
       html += `<div class="price-summary">
-        <div class="price-summary-row">
-          <span><span class="lbl">Active roster buy</span>${coinHtml(activeBuy)}</span>
-          <span><span class="lbl">Active roster sell</span>${coinHtml(activeSell)}</span>
+        <div class="price-summary-grid">
+          <div class="ps-col">
+            <div class="ps-title">Active Roster</div>
+            <div class="ps-line"><span class="ps-lbl">Buy</span>${coinHtml(activeBuy)}</div>
+            <div class="ps-line"><span class="ps-lbl">Sell</span>${coinHtml(activeSell)}</div>
+          </div>
+          <div class="ps-col">
+            <div class="ps-title">All Sets</div>
+            <div class="ps-line"><span class="ps-lbl">Buy</span>${coinHtml(allBuy)}</div>
+            <div class="ps-line"><span class="ps-lbl">Sell</span>${coinHtml(allSell)}</div>
+          </div>
+          <div class="ps-col ps-col-cheapest">
+            <div class="ps-line"><span class="ps-lbl">Cheapest buy</span>${cheapestBuy?`<b>${escapeHtml(cheapestBuy.name)}</b> ${coinHtml(cheapestBuy.val)}`:'—'}</div>
+            <div class="ps-line"><span class="ps-lbl">Cheapest sell</span>${cheapestSell?`<b>${escapeHtml(cheapestSell.name)}</b> ${coinHtml(cheapestSell.val)}`:'—'}</div>
+          </div>
         </div>
-        <div class="price-summary-row">
-          <span><span class="lbl">All sets buy</span>${coinHtml(allBuy)}</span>
-          <span><span class="lbl">All sets sell</span>${coinHtml(allSell)}</span>
-        </div>
-        <span class="note">live from the GW2 API${pricesUpdatedAt?', updated '+pricesUpdatedAt.toLocaleTimeString():''} — sum of buy-order and sell-listing prices across all skins in each set${collectedNote}. Check off sets below as you collect them to remove them from these totals.</span>
+        <span class="note">live from the GW2 API${pricesUpdatedAt?', updated '+pricesUpdatedAt.toLocaleTimeString():''} — sums are buy-order and sell-listing totals across all skins in each set${collectedNote}; cheapest buy/sell are the single lowest-priced uncollected sets. Check off sets below as you collect them to update these.</span>
       </div>`;
     }
 
