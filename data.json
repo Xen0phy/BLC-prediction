@@ -1,0 +1,983 @@
+[
+  {
+    "name": "Fused",
+    "added": "2013-03-26",
+    "appearances": [
+      "2018-07-24",
+      "2019-07-30",
+      "2021-02-23"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Sclerite",
+    "added": "2013-05-14",
+    "appearances": [
+      "2016-11-21",
+      "2020-08-11"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Dragon's Jade",
+    "added": "2013-06-11",
+    "appearances": [
+      "2018-01-09",
+      "2019-01-22",
+      "2019-06-25",
+      "2021-02-02"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Aetherized weapons",
+    "added": "2013-07-23",
+    "appearances": [],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Zodiac",
+    "added": "2013-08-20",
+    "appearances": [
+      "2016-12-13",
+      "2020-01-14",
+      "2021-05-25"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Dreamthistle",
+    "added": "2013-10-29",
+    "appearances": [
+      "2017-11-07",
+      "2019-03-05",
+      "2020-02-25",
+      "2021-08-17"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Lovestruck",
+    "added": "2014-02-04",
+    "appearances": [
+      "2017-02-08",
+      "2018-02-06",
+      "2020-01-28",
+      "2021-07-13"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Tormented",
+    "added": "2014-03-04",
+    "appearances": [
+      "2018-03-06",
+      "2020-03-17",
+      "2021-08-31"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Phoenix",
+    "added": "2014-05-20",
+    "appearances": [
+      "2017-01-17",
+      "2018-11-13",
+      "2019-09-17",
+      "2020-07-28"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Ley Line",
+    "added": "2014-07-15",
+    "appearances": [
+      "2017-11-07",
+      "2019-05-14",
+      "2021-01-05"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Chaos",
+    "added": "2014-08-12",
+    "appearances": [
+      "2018-04-10",
+      "2019-04-09",
+      "2020-04-14"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Tempest",
+    "added": "2014-09-30",
+    "appearances": [
+      "2018-06-26",
+      "2020-06-23"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Pact Fleet",
+    "added": "2014-11-18",
+    "appearances": [
+      "2017-09-22",
+      "2019-01-08",
+      "2020-11-17"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Wintersday",
+    "added": "2014-12-16",
+    "appearances": [
+      "2016-12-13",
+      "2018-12-11"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Mordrem",
+    "added": "2015-01-13",
+    "appearances": [
+      "2016-11-21",
+      "2019-08-27",
+      "2021-03-23"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Crimson Lion",
+    "added": "2015-02-10",
+    "appearances": [
+      "2017-01-17",
+      "2018-02-06",
+      "2019-01-22",
+      "2020-01-14",
+      "2021-06-22"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Shadow",
+    "added": "2015-03-16",
+    "appearances": [
+      "2016-10-08",
+      "2018-05-08",
+      "2020-08-11"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Balthazar's",
+    "added": "2015-04-28",
+    "appearances": [
+      "2017-05-02",
+      "2018-09-18",
+      "2020-09-15"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Daydreamer's",
+    "added": "2015-05-19",
+    "appearances": [
+      "2017-07-25",
+      "2020-12-15"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Scientific",
+    "added": "2015-06-09",
+    "appearances": [
+      "2018-08-28",
+      "2020-08-25"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Gallant",
+    "added": "2015-06-23",
+    "appearances": [
+      "2018-08-28",
+      "2020-03-17"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Dwayna's",
+    "added": "2015-08-11",
+    "appearances": [
+      "2017-07-25",
+      "2018-05-08",
+      "2021-02-02"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Improvised",
+    "added": "2015-10-23",
+    "appearances": [
+      "2016-10-08",
+      "2017-10-17",
+      "2020-06-23"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Glittering",
+    "added": "2015-11-04",
+    "appearances": [
+      "2017-03-30",
+      "2018-04-10",
+      "2021-01-05"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Plasma",
+    "added": "2015-11-17",
+    "appearances": [
+      "2017-02-08",
+      "2018-06-26",
+      "2021-02-23"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Merciless",
+    "added": "2015-12-01",
+    "appearances": [
+      "2018-01-09",
+      "2020-10-13"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Timekeeper",
+    "added": "2015-12-15",
+    "appearances": [
+      "2017-09-22",
+      "2020-08-25"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Soaring",
+    "added": "2016-02-09",
+    "appearances": [
+      "2017-05-02",
+      "2019-07-30"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Dominator",
+    "added": "2016-03-08",
+    "appearances": [
+      "2019-05-14",
+      "2021-06-22"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Spectral",
+    "added": "2016-04-19",
+    "appearances": [
+      "2017-03-30",
+      "2019-01-08",
+      "2020-07-28"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Cavalier",
+    "added": "2016-05-17",
+    "appearances": [
+      "2018-07-24",
+      "2019-03-05",
+      "2020-02-25"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Embellished",
+    "added": "2016-07-26",
+    "appearances": [
+      "2019-06-25"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Bloodstone",
+    "added": "2016-08-23",
+    "appearances": [
+      "2018-03-06",
+      "2019-11-19"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Gargoyle",
+    "added": "2016-10-18",
+    "appearances": [
+      "2018-10-16",
+      "2021-10-05"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Frostforged",
+    "added": "2016-12-13",
+    "appearances": [
+      "2017-12-12",
+      "2019-12-17"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Devoted",
+    "added": "2017-02-08",
+    "appearances": [
+      "2020-09-15"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Beastslayer",
+    "added": "2017-03-28",
+    "appearances": [
+      "2018-09-18",
+      "2019-09-17"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Keepsake",
+    "added": "2017-05-16",
+    "appearances": [
+      "2019-04-09",
+      "2020-04-14"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Abaddon",
+    "added": "2017-07-25",
+    "appearances": [
+      "2019-09-17",
+      "2021-04-27"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "War God's",
+    "added": "2017-09-22",
+    "appearances": [
+      "2020-05-26",
+      "2022-02-28"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Shifting Sands",
+    "added": "2017-11-07",
+    "appearances": [
+      "2019-08-27",
+      "2021-08-31"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Glacial",
+    "added": "2017-12-12",
+    "appearances": [
+      "2018-12-11",
+      "2019-12-17",
+      "2022-02-28"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Alchemist",
+    "added": "2018-02-06",
+    "appearances": [
+      "2020-01-28",
+      "2021-12-15"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Inquest Mark II",
+    "added": "2018-03-27",
+    "appearances": [
+      "2020-11-17"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Desert King",
+    "added": "2018-06-26",
+    "appearances": [
+      "2018-11-13",
+      "2021-03-23"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Equinox",
+    "added": "2018-08-28",
+    "appearances": [
+      "2020-05-26",
+      "2022-03-29"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Mad Realm",
+    "added": "2018-10-16",
+    "appearances": [
+      "2019-10-15",
+      "2021-11-09"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Orchestral",
+    "added": "2018-12-11",
+    "appearances": [
+      "2021-04-27",
+      "2022-08-23"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Defiant Glass",
+    "added": "2019-03-05",
+    "appearances": [
+      "2021-05-25",
+      "2022-06-07",
+      "2022-11-29"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Branded",
+    "added": "2019-05-14",
+    "appearances": [
+      "2021-07-13",
+      "2022-10-04"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Bioluminescent",
+    "added": "2019-06-25",
+    "appearances": [
+      "2021-08-17",
+      "2022-11-08"
+    ],
+    "retired": true,
+    "type": null
+  },
+  {
+    "name": "Endless Ocean",
+    "added": "2019-08-27",
+    "appearances": [
+      "2021-11-09",
+      "2022-08-23",
+      "2023-02-28"
+    ],
+    "retired": true,
+    "type": "short"
+  },
+  {
+    "name": "Seven Reapers",
+    "added": "2019-10-15",
+    "appearances": [
+      "2021-12-15",
+      "2022-12-13"
+    ],
+    "retired": true,
+    "type": "long"
+  },
+  {
+    "name": "Draconic",
+    "added": "2020-01-14",
+    "appearances": [
+      "2022-03-29",
+      "2023-02-28"
+    ],
+    "retired": true,
+    "type": "long"
+  },
+  {
+    "name": "Dark Wing",
+    "added": "2020-03-17",
+    "appearances": [
+      "2021-10-05",
+      "2022-08-02",
+      "2023-01-31",
+      "2023-08-22"
+    ],
+    "retired": true,
+    "type": "short"
+  },
+  {
+    "name": "Ice Reaver",
+    "added": "2020-05-26",
+    "appearances": [
+      "2022-04-19",
+      "2023-03-28",
+      "2024-02-27",
+      "2025-03-11",
+      "2026-03-17"
+    ],
+    "retired": true,
+    "type": "long"
+  },
+  {
+    "name": "Eternal Forged",
+    "added": "2020-07-28",
+    "appearances": [
+      "2022-05-24",
+      "2023-05-23",
+      "2024-04-16"
+    ],
+    "retired": true,
+    "type": "long"
+  },
+  {
+    "name": "Lorekeeper",
+    "added": "2020-08-25",
+    "appearances": [
+      "2022-04-19",
+      "2022-10-19",
+      "2023-04-18",
+      "2023-10-17",
+      "2024-03-19"
+    ],
+    "retired": true,
+    "type": "short"
+  },
+  {
+    "name": "Dark Matter",
+    "added": "2020-10-13",
+    "appearances": [
+      "2022-06-07",
+      "2023-06-06",
+      "2024-05-21"
+    ],
+    "retired": true,
+    "type": "long"
+  },
+  {
+    "name": "Shimmering Aurora",
+    "added": "2020-12-15",
+    "appearances": [
+      "2022-06-28",
+      "2023-06-27",
+      "2024-06-04"
+    ],
+    "retired": true,
+    "type": "long"
+  },
+  {
+    "name": "Bright Inquisitor",
+    "added": "2021-02-02",
+    "appearances": [
+      "2022-05-24",
+      "2022-11-08",
+      "2023-05-23",
+      "2023-11-07",
+      "2024-04-16",
+      "2024-10-09"
+    ],
+    "retired": true,
+    "type": "short"
+  },
+  {
+    "name": "Etherbound",
+    "added": "2021-03-23",
+    "appearances": [
+      "2022-08-02",
+      "2023-08-22",
+      "2024-07-16"
+    ],
+    "retired": true,
+    "type": "long"
+  },
+  {
+    "name": "Maguuma",
+    "added": "2021-06-22",
+    "appearances": [
+      "2022-10-19",
+      "2023-09-12",
+      "2024-09-10",
+      "2025-06-24"
+    ],
+    "retired": true,
+    "type": "long"
+  },
+  {
+    "name": "Magical",
+    "added": "2021-08-17",
+    "appearances": [
+      "2022-06-28",
+      "2022-12-13",
+      "2023-06-27",
+      "2024-01-09",
+      "2024-06-25",
+      "2024-12-10",
+      "2025-06-03"
+    ],
+    "retired": true,
+    "type": "short"
+  },
+  {
+    "name": "Venombite",
+    "added": "2021-10-26",
+    "appearances": [
+      "2022-11-29",
+      "2023-11-07",
+      "2024-11-05",
+      "2025-09-09"
+    ],
+    "retired": true,
+    "type": "long"
+  },
+  {
+    "name": "Abyss Stalker",
+    "added": "2021-12-14",
+    "appearances": [
+      "2023-01-10",
+      "2023-11-28",
+      "2024-11-19",
+      "2025-10-28"
+    ],
+    "retired": true,
+    "type": "long"
+  },
+  {
+    "name": "White Tiger",
+    "added": "2022-01-25",
+    "appearances": [
+      "2022-10-04",
+      "2023-03-28",
+      "2023-09-12",
+      "2024-02-27",
+      "2024-09-10",
+      "2025-03-11",
+      "2025-09-09",
+      "2026-02-03",
+      "2026-02-24"
+    ],
+    "retired": true,
+    "type": "short"
+  },
+  {
+    "name": "Red Crane",
+    "added": "2022-02-28",
+    "appearances": [
+      "2023-01-31",
+      "2024-01-09",
+      "2025-01-28",
+      "2026-01-16"
+    ],
+    "retired": true,
+    "type": "long"
+  },
+  {
+    "name": "Steel Lotus",
+    "added": "2022-04-19",
+    "appearances": [
+      "2023-04-18",
+      "2024-03-19",
+      "2025-03-25",
+      "2026-04-14"
+    ],
+    "retired": true,
+    "type": "long"
+  },
+  {
+    "name": "Fox Fire",
+    "added": "2022-06-28",
+    "appearances": [
+      "2023-01-10",
+      "2023-07-18",
+      "2024-01-30",
+      "2024-07-16",
+      "2025-01-14",
+      "2025-06-24",
+      "2025-12-09",
+      "2026-06-23"
+    ],
+    "retired": true,
+    "type": "short"
+  },
+  {
+    "name": "New Kaineng",
+    "added": "2022-10-04",
+    "appearances": [
+      "2023-07-18",
+      "2024-06-25",
+      "2025-05-06",
+      "2026-06-02"
+    ],
+    "retired": true,
+    "type": "long"
+  },
+  {
+    "name": "Dokkaebi",
+    "added": "2022-10-18",
+    "appearances": [
+      "2023-10-17",
+      "2024-10-09",
+      "2025-08-19"
+    ],
+    "retired": false,
+    "type": "long"
+  },
+  {
+    "name": "Snow Garden",
+    "added": "2022-12-06",
+    "appearances": [
+      "2023-06-06",
+      "2023-12-12",
+      "2024-06-04",
+      "2024-11-19",
+      "2025-04-15",
+      "2025-10-28",
+      "2026-04-14"
+    ],
+    "retired": false,
+    "type": "short"
+  },
+  {
+    "name": "Reflective Koi",
+    "added": "2023-01-31",
+    "appearances": [
+      "2023-12-12",
+      "2025-01-14",
+      "2025-12-09"
+    ],
+    "retired": false,
+    "type": "long"
+  },
+  {
+    "name": "Collapsing Star",
+    "added": "2023-03-28",
+    "appearances": [
+      "2024-01-30",
+      "2025-02-11",
+      "2026-02-24"
+    ],
+    "retired": false,
+    "type": "long"
+  },
+  {
+    "name": "Paladin's Decree",
+    "added": "2023-05-23",
+    "appearances": [
+      "2023-11-28",
+      "2024-05-21",
+      "2024-11-05",
+      "2025-03-25",
+      "2025-10-07",
+      "2026-03-17"
+    ],
+    "retired": false,
+    "type": "short"
+  },
+  {
+    "name": "Vinelord Edgebloom",
+    "added": "2023-09-12",
+    "appearances": [
+      "2024-08-20",
+      "2025-06-03",
+      "2026-07-15"
+    ],
+    "retired": false,
+    "type": "long"
+  },
+  {
+    "name": "Thundercrag",
+    "added": "2023-12-12",
+    "appearances": [
+      "2024-12-10",
+      "2025-11-18"
+    ],
+    "retired": false,
+    "type": "long"
+  },
+  {
+    "name": "Necrotic Essence",
+    "added": "2024-02-27",
+    "appearances": [
+      "2024-08-20",
+      "2025-02-11",
+      "2025-08-19",
+      "2026-08-11"
+    ],
+    "retired": false,
+    "type": "short"
+  },
+  {
+    "name": "Shadow Chevalier",
+    "added": "2024-05-21",
+    "appearances": [
+      "2026-06-23"
+    ],
+    "retired": false,
+    "type": "long"
+  },
+  {
+    "name": "Chromatic Assassin",
+    "added": "2024-06-04",
+    "appearances": [
+      "2025-04-15",
+      "2026-05-12"
+    ],
+    "retired": false,
+    "type": "long"
+  },
+  {
+    "name": "Void Corrupted",
+    "added": "2024-08-20",
+    "appearances": [
+      "2025-01-28",
+      "2025-07-15",
+      "2026-01-16",
+      "2026-07-15"
+    ],
+    "retired": false,
+    "type": "short"
+  },
+  {
+    "name": "Mystical Beast",
+    "added": "2024-10-09",
+    "appearances": [
+      "2025-07-15",
+      "2026-08-11"
+    ],
+    "retired": false,
+    "type": "long"
+  },
+  {
+    "name": "Foefire",
+    "added": "2024-11-05",
+    "appearances": [
+      "2025-10-07"
+    ],
+    "retired": false,
+    "type": "long"
+  },
+  {
+    "name": "Dragon Essence",
+    "added": "2024-12-10",
+    "appearances": [
+      "2025-05-06",
+      "2025-11-18",
+      "2026-06-02"
+    ],
+    "retired": false,
+    "type": "short"
+  },
+  {
+    "name": "Imperial Everbloom",
+    "added": "2025-02-11",
+    "appearances": [
+      "2026-02-03"
+    ],
+    "retired": false,
+    "type": "long"
+  },
+  {
+    "name": "Shade-Touched",
+    "added": "2025-09-09",
+    "appearances": [],
+    "retired": false,
+    "type": "long"
+  },
+  {
+    "name": "Calligrapher's",
+    "added": "2025-11-18",
+    "appearances": [
+      "2026-05-12"
+    ],
+    "retired": false,
+    "type": "short"
+  },
+  {
+    "name": "Painter's Brilliance",
+    "added": "2026-02-03",
+    "appearances": [],
+    "retired": false,
+    "type": "long"
+  },
+  {
+    "name": "Synergetics",
+    "added": "2026-05-12",
+    "appearances": [],
+    "retired": false,
+    "type": "long"
+  },
+  {
+    "name": "Primeval",
+    "added": "2026-08-11",
+    "appearances": [],
+    "retired": false,
+    "type": "short"
+  }
+]

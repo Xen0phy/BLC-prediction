@@ -61,8 +61,9 @@
   .type-unknown{background:var(--unknown-bg);color:var(--unknown);}
 
   .timeline-block{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px 18px 20px;margin-bottom:32px;overflow-x:auto;}
-  .timeline-row{display:grid;grid-template-columns:150px 1fr;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--line-soft);}
+  .timeline-row{display:grid;grid-template-columns:150px 1fr;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--line-soft);cursor:pointer;}
   .timeline-row:last-child{border-bottom:none;}
+  .timeline-row:hover .timeline-label{color:var(--gold-bright);}
   .timeline-label{font-size:12px;color:var(--cream);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .timeline-track{position:relative;height:20px;min-width:420px;}
   .timeline-track .axis-line{position:absolute;top:50%;left:0;right:0;height:1px;background:var(--line-soft);}
@@ -71,6 +72,14 @@
   .timeline-dot.short{background:var(--short);}
   .timeline-dot.unknown{background:var(--unknown);}
   .timeline-dot.predicted{background:transparent;border:1.5px dashed var(--gold-bright);width:11px;height:11px;}
+  .timeline-connector{position:absolute;top:50%;height:2px;transform:translateY(-50%);}
+  .timeline-connector.long{background:var(--long);}
+  .timeline-connector.short{background:var(--short);}
+  .timeline-connector.unknown{background:var(--unknown);}
+  .timeline-connector.to-predicted{height:0;border-top:2px dashed;background:none;}
+  .timeline-connector.to-predicted.long{border-color:var(--long);}
+  .timeline-connector.to-predicted.short{border-color:var(--short);}
+  .timeline-connector.to-predicted.unknown{border-color:var(--unknown);}
   .timeline-refline{position:absolute;top:-2px;bottom:-2px;width:1px;z-index:1;}
   .timeline-refline.today{background:var(--cream-faint);}
   .timeline-refline.next-update{background:var(--gold-bright);}
@@ -98,31 +107,16 @@
   .pct-bar-fill{height:100%;background:var(--gold);}
   .pct-num{font-family:var(--font-num);font-size:12px;color:var(--gold-bright);min-width:34px;text-align:right;}
 
-  select.type-select{background:var(--panel2);border:1px solid var(--line);color:var(--cream);border-radius:4px;padding:4px 6px;font-size:11px;font-family:var(--font-num);}
+  .detail-panel{background:var(--panel2);border:1px solid var(--line);border-radius:6px;margin:6px 0 16px;padding:14px 16px;font-size:12.5px;}
+  .detail-panel .detail-row{display:flex;gap:22px;flex-wrap:wrap;margin-bottom:10px;color:var(--cream-dim);}
+  .detail-panel .detail-row b{color:var(--cream);font-weight:600;}
+  .chip-list{display:flex;flex-wrap:wrap;gap:6px;}
+  .chip{display:inline-block;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:4px 9px;font-size:12px;font-family:var(--font-num);color:var(--cream-dim);}
 
-  .roster-actions{display:flex;gap:6px;flex-wrap:wrap;}
   button{font-family:var(--font-body);font-size:12px;cursor:pointer;border-radius:4px;border:1px solid var(--line);background:var(--panel2);color:var(--cream-dim);padding:5px 10px;}
   button:hover{border-color:var(--gold);color:var(--cream);}
-  button.primary{background:var(--gold);border-color:var(--gold);color:#231a0c;font-weight:600;}
-  button.primary:hover{background:var(--gold-bright);}
-  button.danger:hover{border-color:var(--danger);color:#f0a08f;}
-  button.link{background:none;border:none;color:var(--gold);padding:0;font-size:12px;text-decoration:underline;}
   button.small{padding:2px 7px;font-size:11px;}
 
-  .edit-panel{background:var(--panel2);border:1px solid var(--line);border-radius:6px;margin:6px 0 16px;padding:14px 16px;}
-  .edit-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;align-items:flex-end;}
-  .field{display:flex;flex-direction:column;gap:4px;}
-  .field label{font-size:11px;color:var(--cream-faint);}
-  .field input,.field select{background:var(--panel);border:1px solid var(--line);color:var(--cream);border-radius:4px;padding:7px 9px;font-size:13px;font-family:var(--font-body);min-width:150px;}
-  .field input:focus,.field select:focus{outline:none;border-color:var(--gold);}
-  .chip-list{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px;}
-  .chip{display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:4px 6px 4px 10px;font-size:12px;font-family:var(--font-num);}
-  .chip button{padding:0 5px;font-size:12px;border:none;background:none;color:var(--cream-faint);}
-  .chip button:hover{color:var(--danger);}
-  .add-appearance{display:flex;gap:6px;align-items:center;}
-
-
-  .panel-box{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px 20px;margin-bottom:20px;}
   .footnote{font-size:11.5px;color:var(--cream-faint);line-height:1.6;margin-top:6px;}
   .status-msg{font-size:12px;padding:8px 10px;border-radius:4px;margin-bottom:14px;display:none;}
   .status-msg.show{display:block;}
@@ -142,25 +136,25 @@
     </svg>
     <div>
       <h1>Black Lion Chest — Rotation Predictor</h1>
-      <p>Full appearance history, editable, with a timeline view.</p>
+      <p>Read-only view, sourced live from data.json.</p>
     </div>
   </div>
   <div id="app"><div class="loading">Loading rotation data…</div></div>
 </div>
 
 <script>
-const SEED = [{"name":"Fused","added":"2013-03-26","appearances":["2018-07-24","2019-07-30","2021-02-23"],"retired":true},{"name":"Sclerite","added":"2013-05-14","appearances":["2016-11-21","2020-08-11"],"retired":true},{"name":"Dragon's Jade","added":"2013-06-11","appearances":["2018-01-09","2019-01-22","2019-06-25","2021-02-02"],"retired":true},{"name":"Aetherized weapons","added":"2013-07-23","appearances":[],"retired":true},{"name":"Zodiac","added":"2013-08-20","appearances":["2016-12-13","2020-01-14","2021-05-25"],"retired":true},{"name":"Dreamthistle","added":"2013-10-29","appearances":["2017-11-07","2019-03-05","2020-02-25","2021-08-17"],"retired":true},{"name":"Lovestruck","added":"2014-02-04","appearances":["2017-02-08","2018-02-06","2020-01-28","2021-07-13"],"retired":true},{"name":"Tormented","added":"2014-03-04","appearances":["2018-03-06","2020-03-17","2021-08-31"],"retired":true},{"name":"Phoenix","added":"2014-05-20","appearances":["2017-01-17","2018-11-13","2019-09-17","2020-07-28"],"retired":true},{"name":"Ley Line","added":"2014-07-15","appearances":["2017-11-07","2019-05-14","2021-01-05"],"retired":true},{"name":"Chaos","added":"2014-08-12","appearances":["2018-04-10","2019-04-09","2020-04-14"],"retired":true},{"name":"Tempest","added":"2014-09-30","appearances":["2018-06-26","2020-06-23"],"retired":true},{"name":"Pact Fleet","added":"2014-11-18","appearances":["2017-09-22","2019-01-08","2020-11-17"],"retired":true},{"name":"Wintersday","added":"2014-12-16","appearances":["2016-12-13","2018-12-11"],"retired":true},{"name":"Mordrem","added":"2015-01-13","appearances":["2016-11-21","2019-08-27","2021-03-23"],"retired":true},{"name":"Crimson Lion","added":"2015-02-10","appearances":["2017-01-17","2018-02-06","2019-01-22","2020-01-14","2021-06-22"],"retired":true},{"name":"Shadow","added":"2015-03-16","appearances":["2016-10-08","2018-05-08","2020-08-11"],"retired":true},{"name":"Balthazar's","added":"2015-04-28","appearances":["2017-05-02","2018-09-18","2020-09-15"],"retired":true},{"name":"Daydreamer's","added":"2015-05-19","appearances":["2017-07-25","2020-12-15"],"retired":true},{"name":"Scientific","added":"2015-06-09","appearances":["2018-08-28","2020-08-25"],"retired":true},{"name":"Gallant","added":"2015-06-23","appearances":["2018-08-28","2020-03-17"],"retired":true},{"name":"Dwayna's","added":"2015-08-11","appearances":["2017-07-25","2018-05-08","2021-02-02"],"retired":true},{"name":"Improvised","added":"2015-10-23","appearances":["2016-10-08","2017-10-17","2020-06-23"],"retired":true},{"name":"Glittering","added":"2015-11-04","appearances":["2017-03-30","2018-04-10","2021-01-05"],"retired":true},{"name":"Plasma","added":"2015-11-17","appearances":["2017-02-08","2018-06-26","2021-02-23"],"retired":true},{"name":"Merciless","added":"2015-12-01","appearances":["2018-01-09","2020-10-13"],"retired":true},{"name":"Timekeeper","added":"2015-12-15","appearances":["2017-09-22","2020-08-25"],"retired":true},{"name":"Soaring","added":"2016-02-09","appearances":["2017-05-02","2019-07-30"],"retired":true},{"name":"Dominator","added":"2016-03-08","appearances":["2019-05-14","2021-06-22"],"retired":true},{"name":"Spectral","added":"2016-04-19","appearances":["2017-03-30","2019-01-08","2020-07-28"],"retired":true},{"name":"Cavalier","added":"2016-05-17","appearances":["2018-07-24","2019-03-05","2020-02-25"],"retired":true},{"name":"Embellished","added":"2016-07-26","appearances":["2019-06-25"],"retired":true},{"name":"Bloodstone","added":"2016-08-23","appearances":["2018-03-06","2019-11-19"],"retired":true},{"name":"Gargoyle","added":"2016-10-18","appearances":["2018-10-16","2021-10-05"],"retired":true},{"name":"Frostforged","added":"2016-12-13","appearances":["2017-12-12","2019-12-17"],"retired":true},{"name":"Devoted","added":"2017-02-08","appearances":["2020-09-15"],"retired":true},{"name":"Beastslayer","added":"2017-03-28","appearances":["2018-09-18","2019-09-17"],"retired":true},{"name":"Keepsake","added":"2017-05-16","appearances":["2019-04-09","2020-04-14"],"retired":true},{"name":"Abaddon","added":"2017-07-25","appearances":["2019-09-17","2021-04-27"],"retired":true},{"name":"War God's","added":"2017-09-22","appearances":["2020-05-26","2022-02-28"],"retired":true},{"name":"Shifting Sands","added":"2017-11-07","appearances":["2019-08-27","2021-08-31"],"retired":true},{"name":"Glacial","added":"2017-12-12","appearances":["2018-12-11","2019-12-17","2022-02-28"],"retired":true},{"name":"Alchemist","added":"2018-02-06","appearances":["2020-01-28","2021-12-15"],"retired":true},{"name":"Inquest Mark II","added":"2018-03-27","appearances":["2020-11-17"],"retired":true},{"name":"Desert King","added":"2018-06-26","appearances":["2018-11-13","2021-03-23"],"retired":true},{"name":"Equinox","added":"2018-08-28","appearances":["2020-05-26","2022-03-29"],"retired":true},{"name":"Mad Realm","added":"2018-10-16","appearances":["2019-10-15","2021-11-09"],"retired":true},{"name":"Orchestral","added":"2018-12-11","appearances":["2021-04-27","2022-08-23"],"retired":true},{"name":"Defiant Glass","added":"2019-03-05","appearances":["2021-05-25","2022-06-07","2022-11-29"],"retired":true},{"name":"Branded","added":"2019-05-14","appearances":["2021-07-13","2022-10-04"],"retired":true},{"name":"Bioluminescent","added":"2019-06-25","appearances":["2021-08-17","2022-11-08"],"retired":true},{"name":"Endless Ocean","added":"2019-08-27","appearances":["2021-11-09","2022-08-23","2023-02-28"],"retired":true},{"name":"Seven Reapers","added":"2019-10-15","appearances":["2021-12-15","2022-12-13"],"retired":true},{"name":"Draconic","added":"2020-01-14","appearances":["2022-03-29","2023-02-28"],"retired":true},{"name":"Dark Wing","added":"2020-03-17","appearances":["2021-10-05","2022-08-02","2023-01-31","2023-08-22"],"retired":true},{"name":"Ice Reaver","added":"2020-05-26","appearances":["2022-04-19","2023-03-28","2024-02-27","2025-03-11","2026-03-17"],"retired":true},{"name":"Eternal Forged","added":"2020-07-28","appearances":["2022-05-24","2023-05-23","2024-04-16"],"retired":true},{"name":"Lorekeeper","added":"2020-08-25","appearances":["2022-04-19","2022-10-19","2023-04-18","2023-10-17","2024-03-19"],"retired":true},{"name":"Dark Matter","added":"2020-10-13","appearances":["2022-06-07","2023-06-06","2024-05-21"],"retired":true},{"name":"Shimmering Aurora","added":"2020-12-15","appearances":["2022-06-28","2023-06-27","2024-06-04"],"retired":true},{"name":"Bright Inquisitor","added":"2021-02-02","appearances":["2022-05-24","2022-11-08","2023-05-23","2023-11-07","2024-04-16","2024-10-09"],"retired":true},{"name":"Etherbound","added":"2021-03-23","appearances":["2022-08-02","2023-08-22","2024-07-16"],"retired":true},{"name":"Maguuma","added":"2021-06-22","appearances":["2022-10-19","2023-09-12","2024-09-10","2025-06-24"],"retired":true},{"name":"Magical","added":"2021-08-17","appearances":["2022-06-28","2022-12-13","2023-06-27","2024-01-09","2024-06-25","2024-12-10","2025-06-03"],"retired":true},{"name":"Venombite","added":"2021-10-26","appearances":["2022-11-29","2023-11-07","2024-11-05","2025-09-09"],"retired":true},{"name":"Abyss Stalker","added":"2021-12-14","appearances":["2023-01-10","2023-11-28","2024-11-19","2025-10-28"],"retired":true},{"name":"White Tiger","added":"2022-01-25","appearances":["2022-10-04","2023-03-28","2023-09-12","2024-02-27","2024-09-10","2025-03-11","2025-09-09","2026-02-03","2026-02-24"],"retired":true},{"name":"Red Crane","added":"2022-02-28","appearances":["2023-01-31","2024-01-09","2025-01-28","2026-01-16"],"retired":true},{"name":"Steel Lotus","added":"2022-04-19","appearances":["2023-04-18","2024-03-19","2025-03-25","2026-04-14"],"retired":true},{"name":"Fox Fire","added":"2022-06-28","appearances":["2023-01-10","2023-07-18","2024-01-30","2024-07-16","2025-01-14","2025-06-24","2025-12-09","2026-06-23"],"retired":true},{"name":"New Kaineng","added":"2022-10-04","appearances":["2023-07-18","2024-06-25","2025-05-06","2026-06-02"],"retired":true},{"name":"Dokkaebi","added":"2022-10-18","appearances":["2023-10-17","2024-10-09","2025-08-19"],"retired":false},{"name":"Snow Garden","added":"2022-12-06","appearances":["2023-06-06","2023-12-12","2024-06-04","2024-11-19","2025-04-15","2025-10-28","2026-04-14"],"retired":false},{"name":"Reflective Koi","added":"2023-01-31","appearances":["2023-12-12","2025-01-14","2025-12-09"],"retired":false},{"name":"Collapsing Star","added":"2023-03-28","appearances":["2024-01-30","2025-02-11","2026-02-24"],"retired":false},{"name":"Paladin's Decree","added":"2023-05-23","appearances":["2023-11-28","2024-05-21","2024-11-05","2025-03-25","2025-10-07","2026-03-17"],"retired":false},{"name":"Vinelord Edgebloom","added":"2023-09-12","appearances":["2024-08-20","2025-06-03","2026-07-15"],"retired":false},{"name":"Thundercrag","added":"2023-12-12","appearances":["2024-12-10","2025-11-18"],"retired":false},{"name":"Necrotic Essence","added":"2024-02-27","appearances":["2024-08-20","2025-02-11","2025-08-19","2026-08-11"],"retired":false},{"name":"Shadow Chevalier","added":"2024-05-21","appearances":["2026-06-23"],"retired":false},{"name":"Chromatic Assassin","added":"2024-06-04","appearances":["2025-04-15","2026-05-12"],"retired":false},{"name":"Void Corrupted","added":"2024-08-20","appearances":["2025-01-28","2025-07-15","2026-01-16","2026-07-15"],"retired":false},{"name":"Mystical Beast","added":"2024-10-09","appearances":["2025-07-15","2026-08-11"],"retired":false},{"name":"Foefire","added":"2024-11-05","appearances":["2025-10-07"],"retired":false},{"name":"Dragon Essence","added":"2024-12-10","appearances":["2025-05-06","2025-11-18","2026-06-02"],"retired":false},{"name":"Imperial Everbloom","added":"2025-02-11","appearances":["2026-02-03"],"retired":false},{"name":"Shade-Touched","added":"2025-09-09","appearances":[],"retired":false},{"name":"Calligrapher's","added":"2025-11-18","appearances":["2026-05-12"],"retired":false},{"name":"Painter's Brilliance","added":"2026-02-03","appearances":[],"retired":false},{"name":"Synergetics","added":"2026-05-12","appearances":[],"retired":false},{"name":"Primeval","added":"2026-08-11","appearances":[],"retired":false}];
-const STORAGE_KEY = 'blc-dataset-v2';
+const REFDATE_KEY = 'blc-refdate';
 const CUTOFF = new Date('2021-11-09T00:00:00Z');
 const DAY = 86400000;
-let state = null;
-let expandedId = null;
+let sets = [];
+let nextUpdateDate = null;
+let expandedName = null;
 let activeTab = 'list';
+let dataLoadError = null;
 function switchTab(tab){ activeTab = tab; render(); }
 
 function toUTC(iso){ return new Date(iso + 'T00:00:00Z'); }
 function daysBetween(a,b){ return Math.round((b-a)/DAY); }
-function fmtDate(d){ return d.toISOString().slice(0,10); }
 function fmtDisplay(d){ return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}); }
 function mean(arr){ return arr.reduce((a,b)=>a+b,0)/arr.length; }
 function stdev(arr){ if(arr.length<2) return 0; const m=mean(arr); return Math.sqrt(mean(arr.map(x=>(x-m)**2))); }
@@ -168,25 +162,37 @@ function sigmoid(z){ return 1/(1+Math.exp(-z)); }
 function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
 function todayUTC(){ const n=new Date(); return new Date(Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate())); }
 function escapeHtml(str){ return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-let idCounter = 1;
-function nextId(){ return 'set_'+(idCounter++)+'_'+Date.now().toString(36); }
+function escapeAttr(str){ return String(str).replace(/'/g, "\\'"); }
 
-async function loadState(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){
-      const parsed = JSON.parse(raw);
-      state = Array.isArray(parsed) ? {sets:parsed, nextUpdateDate:null} : parsed;
-      state.sets.forEach(s=>{ if(!s.id) s.id = nextId(); if(s.typeOverride===undefined) s.typeOverride=null; });
-      return;
-    }
-  }catch(e){}
-  state = { sets: JSON.parse(JSON.stringify(SEED)).map(s=>({...s, id: nextId(), typeOverride:null})), nextUpdateDate: null };
-  await saveState();
+async function fetchSets(){
+  const res = await fetch('./data.json', {cache:'no-store'});
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  return await res.json();
 }
-async function saveState(){
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-  catch(e){ showStatus('Could not save — your changes may not persist. (Is your browser blocking local storage, e.g. private/incognito mode?)', true); }
+
+async function loadSets(){
+  try{
+    const fresh = await fetchSets();
+    sets = fresh.map(s=>({
+      name: s.name, added: s.added, appearances: s.appearances||[],
+      retired: !!s.retired, type: s.type ?? null
+    }));
+    dataLoadError = null;
+  }catch(e){
+    dataLoadError = e.message || 'fetch failed';
+    sets = [];
+  }
+}
+
+function loadRefDate(){
+  try{ nextUpdateDate = localStorage.getItem(REFDATE_KEY) || null; }
+  catch(e){ nextUpdateDate = null; }
+}
+function saveRefDate(){
+  try{
+    if(nextUpdateDate) localStorage.setItem(REFDATE_KEY, nextUpdateDate);
+    else localStorage.removeItem(REFDATE_KEY);
+  }catch(e){ showStatus('Could not save the reference date locally (storage blocked).', true); }
 }
 function showStatus(msg, isErr){
   const el = document.getElementById('status-msg');
@@ -196,21 +202,38 @@ function showStatus(msg, isErr){
   setTimeout(()=>el.classList.remove('show'), 3500);
 }
 
+const PATTERN_ANCHOR_NAME = 'Endless Ocean';
+const PATTERN_SEQUENCE = ['short','long','long'];
+function patternType(s){
+  if(!s || !s.added) return null;
+  const sorted = sets.filter(x=>x.added).slice().sort((a,b)=>toUTC(a.added)-toUTC(b.added));
+  const anchorIdx = sorted.findIndex(x=>x.name===PATTERN_ANCHOR_NAME);
+  if(anchorIdx===-1) return null;
+  const idx = sorted.findIndex(x=>x.name===s.name);
+  if(idx===-1 || idx<anchorIdx) return null;
+  return PATTERN_SEQUENCE[(idx-anchorIdx)%3];
+}
+
 function computeGlobalStats(){
   const longGaps=[], shortGaps=[];
   let longCount=0, shortCount=0;
   const debutDays=[];
-  for(const s of state.sets){
+  const debutDaysByType={long:[],short:[]};
+  for(const s of sets){
     const app=(s.appearances||[]).map(toUTC).sort((a,b)=>a-b);
     if(app.length && s.added){
       const added=toUTC(s.added);
       const d=daysBetween(added, app[0]);
-      if(d>0 && app[0]>=CUTOFF) debutDays.push(d);
+      if(d>0 && app[0]>=CUTOFF){
+        debutDays.push(d);
+        const dt = s.type || patternType(s);
+        if(dt==='long' || dt==='short') debutDaysByType[dt].push(d);
+      }
     }
     if(app.length<2) continue;
     if(app[0]<CUTOFF) continue;
     const gaps=[]; for(let i=1;i<app.length;i++) gaps.push(daysBetween(app[i-1],app[i]));
-    let t = s.typeOverride;
+    let t = s.type || patternType(s);
     if(!t){ t = mean(gaps)>250 ? 'long' : 'short'; }
     if(t==='long'){ longGaps.push(...gaps); longCount++; } else { shortGaps.push(...gaps); shortCount++; }
   }
@@ -223,20 +246,28 @@ function computeGlobalStats(){
   const priorShort = 1-priorLong;
   const debutMean = debutDays.length? mean(debutDays):380;
   const debutStd = Math.max(40, debutDays.length>3? stdev(debutDays):150);
-  return {longMean,longStd,shortMean,shortStd,priorLong,priorShort,debutMean,debutStd};
+  const debutLongMean = debutDaysByType.long.length? mean(debutDaysByType.long):debutMean;
+  const debutLongStd = Math.max(40, debutDaysByType.long.length>3? stdev(debutDaysByType.long):debutStd);
+  const debutShortMean = debutDaysByType.short.length? mean(debutDaysByType.short):debutMean;
+  const debutShortStd = Math.max(40, debutDaysByType.short.length>3? stdev(debutDaysByType.short):debutStd);
+  return {longMean,longStd,shortMean,shortStd,priorLong,priorShort,debutMean,debutStd,debutLongMean,debutLongStd,debutShortMean,debutShortStd};
 }
 
 function predictSet(s, stats, refDate){
   const app=(s.appearances||[]).map(toUTC).sort((a,b)=>a-b);
   if(app.length===0){
     const added=toUTC(s.added);
-    const predicted=new Date(added.getTime()+stats.debutMean*DAY);
-    const z=daysBetween(predicted, refDate)/stats.debutStd;
-    return {score:sigmoid(z), type:'unknown', count:0, lastDate:null, predicted, daysDiff:daysBetween(predicted,refDate)};
+    const type = s.type || patternType(s) || 'unknown';
+    let dMean=stats.debutMean, dStd=stats.debutStd;
+    if(type==='long'){ dMean=stats.debutLongMean; dStd=stats.debutLongStd; }
+    else if(type==='short'){ dMean=stats.debutShortMean; dStd=stats.debutShortStd; }
+    const predicted=new Date(added.getTime()+dMean*DAY);
+    const z=daysBetween(predicted, refDate)/dStd;
+    return {score:sigmoid(z), type, count:0, lastDate:null, predicted, daysDiff:daysBetween(predicted,refDate)};
   }
   const last=app[app.length-1];
   if(app.length===1){
-    let type = s.typeOverride;
+    let type = s.type || patternType(s);
     let predicted, std;
     if(type==='long'){ predicted=new Date(last.getTime()+stats.longMean*DAY); std=stats.longStd; }
     else if(type==='short'){ predicted=new Date(last.getTime()+stats.shortMean*DAY); std=stats.shortStd; }
@@ -251,7 +282,7 @@ function predictSet(s, stats, refDate){
   }
   const gaps=[]; for(let i=1;i<app.length;i++) gaps.push(daysBetween(app[i-1],app[i]));
   const ownAvg=mean(gaps);
-  let type = s.typeOverride || (ownAvg>250?'long':'short');
+  let type = s.type || patternType(s) || (ownAvg>250?'long':'short');
   const typeMean = type==='long'?stats.longMean:stats.shortMean;
   const typeStd = type==='long'?stats.longStd:stats.shortStd;
   const ownWeight = clamp(gaps.length/3,0,1);
@@ -261,12 +292,12 @@ function predictSet(s, stats, refDate){
   return {score:sigmoid(z), type, count:app.length, lastDate:last, predicted, daysDiff:daysBetween(predicted,refDate)};
 }
 
-function getRefDate(){ return state.nextUpdateDate ? toUTC(state.nextUpdateDate) : todayUTC(); }
+function getRefDate(){ return nextUpdateDate ? toUTC(nextUpdateDate) : todayUTC(); }
 
 function buildPredictions(){
   const stats = computeGlobalStats();
   const refDate = getRefDate();
-  const active = state.sets.filter(s=>!s.retired);
+  const active = sets.filter(s=>!s.retired);
   const scored = active.map(s=>({s, p:predictSet(s, stats, refDate)}));
   const totalScore = scored.reduce((a,b)=>a+b.p.score,0)||1;
   scored.forEach(x=>x.pct = x.p.score/totalScore*100);
@@ -282,14 +313,11 @@ function overdueText(daysDiff){
   if(daysDiff>0) return `<b>${daysDiff}d</b> overdue`;
   return `due in <b>${Math.abs(daysDiff)}d</b>`;
 }
-
-function releaseDate(s){
-  return s.added ? toUTC(s.added) : new Date(0);
-}
+function releaseDate(s){ return s.added ? toUTC(s.added) : new Date(0); }
 
 function renderFullTimeline(stats, refDate){
-  const active = state.sets.filter(s=>!s.retired).slice().sort((a,b)=>releaseDate(b)-releaseDate(a));
-  const retired = state.sets.filter(s=>s.retired).slice().sort((a,b)=>releaseDate(b)-releaseDate(a));
+  const active = sets.filter(s=>!s.retired).slice().sort((a,b)=>releaseDate(b)-releaseDate(a));
+  const retired = sets.filter(s=>s.retired).slice().sort((a,b)=>releaseDate(b)-releaseDate(a));
   const all = active.concat(retired);
   if(all.length===0) return '<div style="color:var(--cream-dim);font-size:13px;padding:16px 0;">No sets yet.</div>';
 
@@ -327,6 +355,8 @@ function renderFullTimeline(stats, refDate){
       <span class="legend-item"><span class="legend-dot" style="background:var(--short)"></span>short</span>
       <span class="legend-item"><span class="legend-dot" style="background:var(--unknown)"></span>unknown</span>
       <span class="legend-item"><span style="width:8px;height:8px;border-radius:50%;border:1.5px dashed var(--gold-bright);display:inline-block;"></span>predicted next</span>
+      <span class="legend-item"><span style="width:14px;height:2px;background:var(--long);display:inline-block;"></span>history</span>
+      <span class="legend-item"><span style="width:14px;height:0;border-top:2px dashed var(--long);display:inline-block;"></span>to predicted</span>
       <span class="legend-item"><span style="width:1px;height:10px;background:var(--gold-bright);display:inline-block;"></span>reference date</span>
     </div>
   </div>`;
@@ -336,17 +366,27 @@ function renderFullTimeline(stats, refDate){
     const app=(s.appearances||[]).map(toUTC).sort((a,b)=>a-b);
     let dots = `<div class="axis-line"></div>${yearLines}`;
     dots += `<div class="timeline-refline next-update" style="left:${pct(refDate)}%"></div>`;
+    if(app.length>1){
+      const l1=clamp(pct(app[0]),0,100), l2=clamp(pct(app[app.length-1]),0,100);
+      dots += `<div class="timeline-connector ${p.type}" style="left:${l1}%;width:${l2-l1}%"></div>`;
+    }
+    if(!x.retired && app.length){
+      const lastPct=clamp(pct(app[app.length-1]),0,100), predPct=clamp(pct(p.predicted),0,100);
+      if(predPct>lastPct){
+        dots += `<div class="timeline-connector to-predicted ${p.type}" style="left:${lastPct}%;width:${predPct-lastPct}%"></div>`;
+      }
+    }
     app.forEach(d=>{
       dots += `<div class="timeline-dot ${p.type}" style="left:${pct(d)}%" title="${fmtDisplay(d)}"></div>`;
     });
     if(!x.retired){
       dots += `<div class="timeline-dot predicted" style="left:${clamp(pct(p.predicted),0,100)}%" title="predicted: ${fmtDisplay(p.predicted)}"></div>`;
     }
-    return `<div class="timeline-row ${x.retired?'is-retired':''}" onclick="toggleEdit('${s.id}')">
+    return `<div class="timeline-row ${x.retired?'is-retired':''}" onclick="toggleExpand('${escapeAttr(s.name)}')">
       <div class="timeline-label" title="${escapeHtml(s.name)}">${escapeHtml(s.name)}</div>
       <div class="timeline-track">${dots}</div>
     </div>
-    ${expandedId===s.id ? `<div style="grid-column:1/-1;">${renderEditPanel(s)}</div>` : ''}`;
+    ${expandedName===s.name ? `<div style="grid-column:1/-1;">${renderDetailPanel(s, p)}</div>` : ''}`;
   }
 
   scored.filter(x=>!x.retired).forEach(x=>{ html += row(x); });
@@ -360,36 +400,16 @@ function renderFullTimeline(stats, refDate){
   return html;
 }
 
-function renderEditPanel(s){
+function renderDetailPanel(s, p){
   const app=(s.appearances||[]).slice().sort();
-  let chips = app.map(d=>`<span class="chip">${d}<button onclick="removeAppearance('${s.id}','${d}')" aria-label="Remove date">×</button></span>`).join('');
-  return `<div class="edit-panel">
-    <div class="edit-row">
-      <div class="field"><label>Name</label><input id="edit-name-${s.id}" value="${escapeHtml(s.name)}"></div>
-      <div class="field"><label>Release date</label><input id="edit-added-${s.id}" type="date" value="${s.added||''}"></div>
-      <div class="field"><label>Type override</label>
-        <select id="edit-type-${s.id}">
-          <option value="" ${!s.typeOverride?'selected':''}>Auto</option>
-          <option value="long" ${s.typeOverride==='long'?'selected':''}>Long</option>
-          <option value="short" ${s.typeOverride==='short'?'selected':''}>Short</option>
-        </select>
-      </div>
-      <div class="field"><label>Retired</label><select id="edit-retired-${s.id}">
-        <option value="false" ${!s.retired?'selected':''}>No</option>
-        <option value="true" ${s.retired?'selected':''}>Yes</option>
-      </select></div>
+  const chips = app.map(d=>`<span class="chip">${d}</span>`).join('') || '<span style="color:var(--cream-faint);">none yet</span>';
+  return `<div class="detail-panel">
+    <div class="detail-row">
+      <span>Release date: <b>${s.added?fmtDisplay(toUTC(s.added)):'—'}</b></span>
+      <span>Status: <b>${s.retired?'Retired':'Active'}</b></span>
+      <span>Type: <b>${p?p.type:(s.type||'unknown')}</b>${s.type?' (set in data.json)':(patternType(s)?' (from rotation pattern)':' (inferred)')}</span>
     </div>
-    <label style="font-size:11px;color:var(--cream-faint);">Appearance dates</label>
-    <div class="chip-list">${chips || '<span style="color:var(--cream-faint);font-size:12px;">none yet</span>'}</div>
-    <div class="add-appearance">
-      <input type="date" id="new-appearance-${s.id}">
-      <button class="small" onclick="addAppearance('${s.id}')">Add date</button>
-    </div>
-    <div class="edit-row" style="margin-top:12px;">
-      <button class="primary" onclick="saveEdit('${s.id}')">Save changes</button>
-      <button onclick="closeEdit()">Cancel</button>
-      <button class="danger" onclick="deleteSet('${s.id}')" style="margin-left:auto;">Delete set</button>
-    </div>
+    <div class="chip-list">${chips}</div>
   </div>`;
 }
 
@@ -399,18 +419,23 @@ function render(){
   const rankedTop = scored.slice().sort((a,b)=>b.pct-a.pct);
   const top2 = rankedTop.slice(0,2);
   const chronological = scored.slice().sort((a,b)=>toUTC(a.s.added)-toUTC(b.s.added));
-  const retiredCount = state.sets.filter(s=>s.retired).length;
+  const retiredCount = sets.filter(s=>s.retired).length;
 
   let html = '';
   html += `<div id="status-msg" class="status-msg"></div>`;
 
   html += `<div class="ref-bar">
     <div class="field"><label>Reference date</label>
-      <input type="date" id="next-update-input" value="${state.nextUpdateDate||''}" onchange="setNextUpdate(this.value)">
+      <input type="date" id="next-update-input" value="${nextUpdateDate||''}" onchange="setNextUpdate(this.value)">
     </div>
-    <span class="note">${state.nextUpdateDate? 'Predictions use the date you set — clear it to fall back to today.' : `Using today (${fmtDisplay(todayUTC())}). Set the known next update date above if you already know it.`}</span>
-    ${state.nextUpdateDate? '<button class="small" onclick="setNextUpdate(\'\')">Clear</button>' : ''}
+    <button class="small" id="fetch-shaman-btn" onclick="fetchNextUpdateFromShaman()">Fetch from thatshaman.com</button>
+    <button class="small" onclick="refreshData()">Refresh data.json</button>
+    <span class="note">${nextUpdateDate? 'Predictions use the date you set — clear it to fall back to today.' : `Using today (${fmtDisplay(todayUTC())}). Set the known next update date above if you already know it.`}</span>
+    ${nextUpdateDate? '<button class="small" onclick="setNextUpdate(\'\')">Clear</button>' : ''}
   </div>`;
+  if(dataLoadError){
+    html += `<div class="status-msg show status-err" style="position:static;margin-bottom:20px;">Could not load data.json (${escapeHtml(dataLoadError)}). Make sure it sits next to index.html and the page is served over http/https, not opened directly as a file.</div>`;
+  }
 
   html += `<div class="tabs">
     <button class="tab-btn ${activeTab==='list'?'active':''}" onclick="switchTab('list')">List</button>
@@ -419,12 +444,12 @@ function render(){
 
   if(activeTab==='timeline'){
     html += `<h2>Rotation timeline</h2>
-    <div class="hint" style="margin:-6px 0 14px;">Active sets first, newest release date on top; retired sets follow the divider, also newest release date first. Click a name to view or edit its history.</div>
+    <div class="hint" style="margin:-6px 0 14px;">Active sets first, newest release date on top; retired sets follow the divider, also newest release date first. Click a name for details.</div>
     <div class="timeline-block">${renderFullTimeline(stats, refDate)}</div>`;
   } else {
     html += `<h2>Most likely next two</h2>`;
     if(top2.length===0){
-      html += `<div style="color:var(--cream-dim);font-size:13px;padding:16px 0;">No active sets yet — add one below.</div>`;
+      html += `<div style="color:var(--cream-dim);font-size:13px;padding:16px 0;">No active sets in data.json.</div>`;
     } else {
       html += `<div class="predict-grid">`;
       top2.forEach((x,i)=>{
@@ -443,131 +468,72 @@ function render(){
       html += `</div>`;
     }
 
-    html += `<div class="section-head"><h2>Full active roster</h2><span class="hint">oldest release date first — click a name to view or edit its full history</span></div>`;
+    html += `<div class="section-head"><h2>Full active roster</h2><span class="hint">oldest release date first — click a name for details</span></div>`;
     html += `<table class="roster"><thead><tr>
-      <th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th class="num">Est. next</th><th>Likelihood</th><th></th>
+      <th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th class="num">Est. next</th><th>Likelihood</th>
     </tr></thead><tbody>`;
     chronological.forEach(x=>{
       const p=x.p, s=x.s;
       html += `<tr>
-        <td class="name" onclick="toggleEdit('${s.id}')">${escapeHtml(s.name)}</td>
-        <td>
-          <select class="type-select" onchange="setTypeOverride('${s.id}', this.value)">
-            <option value="" ${!s.typeOverride?'selected':''}>auto (${p.type})</option>
-            <option value="long" ${s.typeOverride==='long'?'selected':''}>long</option>
-            <option value="short" ${s.typeOverride==='short'?'selected':''}>short</option>
-          </select>
-        </td>
+        <td class="name" onclick="toggleExpand('${escapeAttr(s.name)}')">${escapeHtml(s.name)}</td>
+        <td>${typeTag(p.type)}</td>
         <td class="num">${p.count}</td>
         <td class="num">${p.lastDate?fmtDisplay(p.lastDate):'—'}</td>
         <td class="num">${fmtDisplay(p.predicted)}</td>
         <td><div class="pct-bar-wrap"><div class="pct-bar-track"><div class="pct-bar-fill" style="width:${clamp(x.pct*4,2,100)}%"></div></div><span class="pct-num">${x.pct.toFixed(1)}%</span></div></td>
-        <td>
-          <div class="roster-actions">
-            <button onclick="toggleEdit('${s.id}')">${expandedId===s.id?'Close':'Edit'}</button>
-            <button class="danger" onclick="retireSet('${s.id}')">Retire</button>
-          </div>
-        </td>
       </tr>
-      ${expandedId===s.id ? `<tr><td colspan="7">${renderEditPanel(s)}</td></tr>` : ''}
+      ${expandedName===s.name ? `<tr><td colspan="6">${renderDetailPanel(s,p)}</td></tr>` : ''}
       `;
     });
     html += `</tbody></table>`;
-
-    html += `<div class="panel-box">
-      <h3>Add a new set</h3>
-      <div class="edit-row">
-        <div class="field"><label>Name</label><input id="new-name" placeholder="e.g. Void Corrupted"></div>
-        <div class="field"><label>Release date (added to game)</label><input id="new-added" type="date"></div>
-        <div class="field"><label>First BLC appearance (optional)</label><input id="new-first" type="date"></div>
-        <button class="primary" onclick="addSet()">Add set</button>
-      </div>
-      <div class="footnote">Leave "first appearance" blank if it hasn't debuted yet. You can add more appearance dates and edit everything afterward by clicking the set's name. Retired sets and their full history are on the Timeline tab.</div>
-    </div>`;
   }
 
   html += `<div class="footnote" style="margin-top:24px;">
-    Sets are classified long-cycle (~${Math.round(stats.longMean)}d between appearances) or short-cycle (~${Math.round(stats.shortMean)}d), recomputed live from current data, unless you set a manual override. Likelihood reflects how close the reference date is to each set's projected next appearance relative to normal variance for its type — it doesn't factor in how many times a set has already appeared toward its typical retirement, so use the appearance count to judge that yourself. Edits are saved automatically to this browser's local storage — they stay on this device/browser and won't follow you if you open the file elsewhere or clear browsing data.
+    Sets from Endless Ocean onward (by release order) follow a known short-long-long rotation (~${Math.round(stats.shortMean)}d / ~${Math.round(stats.longMean)}d between appearances, recomputed live) unless <code>data.json</code> sets a <code>"type"</code> explicitly for a given set. Sets before Endless Ocean, and appearances before 9 Nov 2021, predate the current system and are left unclassified unless typed in the file. Likelihood reflects how close the reference date is to each set's projected next appearance relative to normal variance for its type — it doesn't factor in how many times a set has already appeared toward its typical retirement, so use the appearance count to judge that yourself.
+    <br><br>
+    <code>data.json</code> is the only source of truth — this page is read-only and reloads it fresh (no caching) every time it loads or you hit "Refresh data.json". The only thing saved in your browser is the reference date above.
   </div>`;
 
   document.getElementById('app').innerHTML = html;
 }
 
-function toggleEdit(id){ expandedId = (expandedId===id) ? null : id; render(); }
-function closeEdit(){ expandedId = null; render(); }
+function toggleExpand(name){ expandedName = (expandedName===name) ? null : name; render(); }
 
-async function setNextUpdate(val){
-  state.nextUpdateDate = val || null;
-  await saveState();
+function setNextUpdate(val){
+  nextUpdateDate = val || null;
+  saveRefDate();
   render();
 }
-async function setTypeOverride(id, val){
-  const s = state.sets.find(x=>x.id===id);
-  if(!s) return;
-  s.typeOverride = val || null;
-  await saveState();
-  render();
+
+async function fetchNextUpdateFromShaman(){
+  const btn = document.getElementById('fetch-shaman-btn');
+  const origText = btn ? btn.textContent : '';
+  if(btn){ btn.disabled = true; btn.textContent = 'Fetching…'; }
+  try{
+    const res = await fetch('https://thatshaman.com/tools/countdown/?format=json');
+    if(!res.ok) throw new Error('bad response');
+    const data = await res.json();
+    if(!data.when) throw new Error('no date in response');
+    const iso = String(data.when).slice(0,10);
+    nextUpdateDate = iso;
+    saveRefDate();
+    showStatus(`Reference date set to ${iso} from thatshaman.com${data.confirmed===false?' (unconfirmed)':''}.`, false);
+    render();
+  }catch(e){
+    showStatus('Could not fetch from thatshaman.com automatically — your browser may be blocking the cross-site request. Check thatshaman.com/tools/countdown and enter the date manually.', true);
+    if(btn){ btn.disabled = false; btn.textContent = origText; }
+  }
 }
-async function addAppearance(id){
-  const s = state.sets.find(x=>x.id===id);
-  if(!s) return;
-  const val = document.getElementById('new-appearance-'+id).value;
-  if(!val){ showStatus('Pick a date first.', true); return; }
-  if(!s.appearances) s.appearances=[];
-  if(!s.appearances.includes(val)) s.appearances.push(val);
-  await saveState();
-  render();
-}
-async function removeAppearance(id, dateStr){
-  const s = state.sets.find(x=>x.id===id);
-  if(!s) return;
-  s.appearances = (s.appearances||[]).filter(d=>d!==dateStr);
-  await saveState();
-  render();
-}
-async function saveEdit(id){
-  const s = state.sets.find(x=>x.id===id);
-  if(!s) return;
-  const name = document.getElementById('edit-name-'+id).value.trim();
-  const added = document.getElementById('edit-added-'+id).value;
-  const type = document.getElementById('edit-type-'+id).value;
-  const retired = document.getElementById('edit-retired-'+id).value === 'true';
-  if(!name || !added){ showStatus('Name and release date are required.', true); return; }
-  s.name = name; s.added = added; s.typeOverride = type || null; s.retired = retired;
-  await saveState();
-  showStatus(`Saved ${name}.`, false);
-  expandedId = null;
-  render();
-}
-async function retireSet(id){
-  const s = state.sets.find(x=>x.id===id);
-  if(!s) return;
-  s.retired = true;
-  await saveState();
-  showStatus(`${s.name} marked as retired.`, false);
-  render();
-}
-async function deleteSet(id){
-  state.sets = state.sets.filter(s=>s.id!==id);
-  await saveState();
-  expandedId = null;
-  showStatus('Set deleted.', false);
-  render();
-}
-async function addSet(){
-  const name = document.getElementById('new-name').value.trim();
-  const added = document.getElementById('new-added').value;
-  const first = document.getElementById('new-first').value;
-  if(!name || !added){ showStatus('Name and release date are required.', true); return; }
-  if(state.sets.some(s=>s.name.toLowerCase()===name.toLowerCase())){ showStatus('A set with that name already exists.', true); return; }
-  state.sets.push({ id: nextId(), name, added, appearances: first?[first]:[], retired:false, typeOverride:null });
-  await saveState();
-  showStatus(`Added ${name}.`, false);
+
+async function refreshData(){
+  await loadSets();
+  showStatus(dataLoadError ? 'Could not refresh data.json.' : 'Reloaded data.json.', !!dataLoadError);
   render();
 }
 
 (async function init(){
-  await loadState();
+  loadRefDate();
+  await loadSets();
   render();
 })();
 </script>
