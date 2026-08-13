@@ -38,14 +38,22 @@
   h2{font-family:var(--font-display);font-weight:400;font-size:18px;color:var(--gold);margin:0 0 12px;}
   h3{font-family:var(--font-display);font-weight:400;font-size:15px;color:var(--gold);margin:0 0 10px;}
 
-  .tabs{display:flex;gap:22px;margin-bottom:24px;border-bottom:1px solid var(--line);}
-  .tab-btn{background:none;border:none;border-bottom:2px solid transparent;color:var(--cream-dim);padding:8px 2px 10px;font-size:14px;font-family:var(--font-display);cursor:pointer;border-radius:0;}
-  .tab-btn:hover{color:var(--cream);}
-  .tab-btn.active{color:var(--gold-bright);border-bottom-color:var(--gold);}
+  .tabs{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--line);}
+  .tab-btn{background:none;border:none;border-bottom:3px solid transparent;color:var(--cream-dim);padding:10px 18px 12px;font-size:16px;font-family:var(--font-display);cursor:pointer;border-radius:6px 6px 0 0;transition:color .15s ease,background-color .15s ease;}
+  .tab-btn:hover{color:var(--cream);background:var(--panel2);}
+  .tab-btn.active{color:var(--gold-bright);border-bottom-color:var(--gold);background:var(--panel);font-weight:600;}
 
   .timeline-divider{display:grid;grid-template-columns:150px 1fr;align-items:center;gap:10px;margin:14px 0 8px;}
+  .timeline-divider.retired-toggle{cursor:pointer;}
+  .timeline-divider.retired-toggle .divider-label{transition:color .15s ease;}
+  .timeline-divider.retired-toggle:hover .divider-label{color:var(--cream-dim);}
   .timeline-divider .divider-label{font-size:10.5px;color:var(--cream-faint);text-transform:uppercase;letter-spacing:0.8px;white-space:nowrap;}
+  .timeline-divider .divider-arrow{display:inline-block;margin-right:4px;font-size:9px;}
   .timeline-divider .divider-line{height:1px;background:var(--line);}
+  .retired-toggle-row{cursor:pointer;}
+  .retired-toggle-row h2{transition:color .15s ease;}
+  .retired-toggle-row:hover h2{color:var(--gold-bright);}
+  .retired-toggle-row .divider-arrow{display:inline-block;margin-right:6px;font-size:12px;color:var(--gold);}
   .timeline-row.is-retired .timeline-label{color:var(--cream-faint);}
 
   .predict-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:36px;}
@@ -598,14 +606,14 @@ function renderFullTimeline(stats, refDate, ext, dispMin, dispMax){
 
   if(retired.length){
     if(foldRetired){
-      html += `<div class="timeline-divider">
-        <div class="divider-label">${retired.length} retired hidden</div>
+      html += `<div class="timeline-divider retired-toggle" onclick="toggleFoldRetired()" role="button" tabindex="0">
+        <div class="divider-label"><span class="divider-arrow">&#9656;</span>Retired sets hidden — click to show</div>
         <div class="divider-line"></div>
       </div>`;
     } else {
       const visibleRetired = scored.filter(x=>x.retired).filter(rowVisible);
-      html += `<div class="timeline-divider">
-        <div class="divider-label">Retired &darr;${manualRange && visibleRetired.length!==retired.length ? ` (${visibleRetired.length} of ${retired.length} in range)` : ''}</div>
+      html += `<div class="timeline-divider retired-toggle" onclick="toggleFoldRetired()" role="button" tabindex="0">
+        <div class="divider-label"><span class="divider-arrow">&#9662;</span>Retired sets${manualRange && visibleRetired.length!==retired.length ? ` (${visibleRetired.length} of ${retired.length} in range)` : ''}</div>
         <div class="divider-line"></div>
       </div>`;
       visibleRetired.forEach(x=>{ html += row(x); });
@@ -662,7 +670,7 @@ function render(){
 
   html += `<div class="tabs">
     <button class="tab-btn ${activeTab==='list'?'active':''}" onclick="switchTab('list')">List</button>
-    <button class="tab-btn ${activeTab==='timeline'?'active':''}" onclick="switchTab('timeline')">Timeline${retiredCount?` (incl. ${retiredCount} retired)`:''}</button>
+    <button class="tab-btn ${activeTab==='timeline'?'active':''}" onclick="switchTab('timeline')">Timeline</button>
   </div>`;
 
   if(activeTab==='timeline'){
@@ -680,7 +688,6 @@ function render(){
 
     html += `<div class="timeline-controls">
       <div class="control-row">
-        <button class="small" onclick="toggleFoldRetired()">${foldRetired ? `Show ${retiredCount} retired sets` : 'Fold retired sets'}</button>
         <button class="small" onclick="fitRangeToVisible()">Fit range to ${foldRetired && retiredCount ? 'active sets' : 'visible'}</button>
         ${(rangeStart||rangeEnd) ? '<button class="small" onclick="resetRange()">Reset date range</button>' : ''}
         <span class="hint">Drag the handles below to zoom the timeline to a date range.</span>
@@ -742,8 +749,10 @@ function render(){
 
     if(retiredCount){
       const vintageCount = sets.filter(s=>s.vintage).length;
-      html += `<div class="section-head" style="margin-top:32px;"><h2>Retired sets</h2><span class="hint">${listShowRetired?`newest release date first — click a name for details${vintageCount?` · ${vintageCount} have gone vintage`:''}`:`${retiredCount} retired sets folded`}</span></div>`;
-      html += `<div style="margin-bottom:14px;"><button class="small" onclick="toggleListRetired()">${listShowRetired?'Fold retired sets':`Show ${retiredCount} retired sets`}</button></div>`;
+      html += `<div class="section-head retired-toggle-row" style="margin-top:32px;" onclick="toggleListRetired()" role="button" tabindex="0">
+        <h2><span class="divider-arrow">${listShowRetired ? '&#9662;' : '&#9656;'}</span>Retired sets</h2>
+        <span class="hint">${listShowRetired?`newest release date first — click a name for details${vintageCount?` · ${vintageCount} have gone vintage`:''}`:'click to show'}</span>
+      </div>`;
       if(listShowRetired){
         const retiredRows = sets.filter(s=>s.retired)
           .map(s=>({s, p:predictSet(s, stats, refDate)}))
