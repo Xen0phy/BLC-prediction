@@ -8,7 +8,8 @@
       "2021-02-23"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Sclerite",
@@ -18,7 +19,8 @@
       "2020-08-11"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Dragon's Jade",
@@ -30,14 +32,16 @@
       "2021-02-02"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Aetherized weapons",
     "added": "2013-07-23",
     "appearances": [],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2016-08-20"
   },
   {
     "name": "Zodiac",
@@ -48,7 +52,8 @@
       "2021-05-25"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Dreamthistle",
@@ -60,7 +65,8 @@
       "2021-08-17"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Lovestruck",
@@ -72,7 +78,8 @@
       "2021-07-13"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Tormented",
@@ -83,7 +90,8 @@
       "2021-08-31"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Phoenix",
@@ -95,7 +103,8 @@
       "2020-07-28"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Ley Line",
@@ -106,7 +115,8 @@
       "2021-01-05"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Chaos",
@@ -117,7 +127,8 @@
       "2020-04-14"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Tempest",
@@ -127,7 +138,8 @@
       "2020-06-23"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Pact Fleet",
@@ -138,7 +150,8 @@
       "2020-11-17"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Wintersday",
@@ -148,7 +161,8 @@
       "2018-12-11"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Mordrem",
@@ -159,7 +173,8 @@
       "2021-03-23"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Crimson Lion",
@@ -172,7 +187,8 @@
       "2021-06-22"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Shadow",
@@ -183,7 +199,8 @@
       "2020-08-11"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Balthazar's",
@@ -194,7 +211,8 @@
       "2020-09-15"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Daydreamer's",
@@ -204,7 +222,8 @@
       "2020-12-15"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Scientific",
@@ -214,7 +233,8 @@
       "2020-08-25"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Gallant",
@@ -224,7 +244,8 @@
       "2020-03-17"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Dwayna's",
@@ -235,7 +256,8 @@
       "2021-02-02"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Improvised",
@@ -246,7 +268,8 @@
       "2020-06-23"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Glittering",
@@ -257,7 +280,8 @@
       "2021-01-05"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Plasma",
@@ -268,7 +292,8 @@
       "2021-02-23"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Merciless",
@@ -278,7 +303,8 @@
       "2020-10-13"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Timekeeper",
@@ -288,7 +314,8 @@
       "2020-08-25"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Soaring",
@@ -298,7 +325,8 @@
       "2019-07-30"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Dominator",
@@ -308,7 +336,8 @@
       "2021-06-22"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Spectral",
@@ -319,7 +348,8 @@
       "2020-07-28"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Cavalier",
@@ -330,7 +360,8 @@
       "2020-02-25"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Embellished",
@@ -339,7 +370,8 @@
       "2019-06-25"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Bloodstone",
@@ -349,7 +381,8 @@
       "2019-11-19"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Gargoyle",
@@ -359,7 +392,8 @@
       "2021-10-05"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Frostforged",
@@ -369,7 +403,8 @@
       "2019-12-17"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-11-09"
   },
   {
     "name": "Devoted",
@@ -378,7 +413,8 @@
       "2020-09-15"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-12-15"
   },
   {
     "name": "Beastslayer",
@@ -388,7 +424,8 @@
       "2019-09-17"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2021-12-15"
   },
   {
     "name": "Keepsake",
@@ -398,7 +435,8 @@
       "2020-04-14"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2022-04-19"
   },
   {
     "name": "Abaddon",
@@ -408,7 +446,8 @@
       "2021-04-27"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2022-04-19"
   },
   {
     "name": "War God's",
@@ -418,7 +457,8 @@
       "2022-02-28"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2022-04-19"
   },
   {
     "name": "Shifting Sands",
@@ -428,7 +468,8 @@
       "2021-08-31"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2022-04-19"
   },
   {
     "name": "Glacial",
@@ -439,7 +480,8 @@
       "2022-02-28"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2022-04-19"
   },
   {
     "name": "Alchemist",
@@ -449,7 +491,8 @@
       "2021-12-15"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2022-06-28"
   },
   {
     "name": "Inquest Mark II",
@@ -458,7 +501,8 @@
       "2020-11-17"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2022-06-28"
   },
   {
     "name": "Desert King",
@@ -468,7 +512,8 @@
       "2021-03-23"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2022-06-28"
   },
   {
     "name": "Equinox",
@@ -478,7 +523,8 @@
       "2022-03-29"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2022-06-28"
   },
   {
     "name": "Mad Realm",
@@ -488,7 +534,8 @@
       "2021-11-09"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2022-10-04"
   },
   {
     "name": "Orchestral",
@@ -498,7 +545,8 @@
       "2022-08-23"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2023-03-28"
   },
   {
     "name": "Defiant Glass",
@@ -509,7 +557,8 @@
       "2022-11-29"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2023-03-28"
   },
   {
     "name": "Branded",
@@ -519,7 +568,8 @@
       "2022-10-04"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2023-03-28"
   },
   {
     "name": "Bioluminescent",
@@ -529,7 +579,8 @@
       "2022-11-08"
     ],
     "retired": true,
-    "type": null
+    "type": null,
+    "vintage": "2023-03-28"
   },
   {
     "name": "Endless Ocean",
@@ -540,7 +591,8 @@
       "2023-02-28"
     ],
     "retired": true,
-    "type": "short"
+    "type": "short",
+    "vintage": "2023-06-06"
   },
   {
     "name": "Seven Reapers",
@@ -550,7 +602,8 @@
       "2022-12-13"
     ],
     "retired": true,
-    "type": "long"
+    "type": "long",
+    "vintage": "2023-10-17"
   },
   {
     "name": "Draconic",
@@ -560,7 +613,8 @@
       "2023-02-28"
     ],
     "retired": true,
-    "type": "long"
+    "type": "long",
+    "vintage": "2024-03-19"
   },
   {
     "name": "Dark Wing",
@@ -572,7 +626,8 @@
       "2023-08-22"
     ],
     "retired": true,
-    "type": "short"
+    "type": "short",
+    "vintage": "2024-03-19"
   },
   {
     "name": "Ice Reaver",
@@ -585,7 +640,8 @@
       "2026-03-17"
     ],
     "retired": true,
-    "type": "long"
+    "type": "long",
+    "vintage": "2024-06-16"
   },
   {
     "name": "Eternal Forged",
@@ -596,7 +652,8 @@
       "2024-04-16"
     ],
     "retired": true,
-    "type": "long"
+    "type": "long",
+    "vintage": "2026-02-24"
   },
   {
     "name": "Lorekeeper",
@@ -609,7 +666,8 @@
       "2024-03-19"
     ],
     "retired": true,
-    "type": "short"
+    "type": "short",
+    "vintage": "2024-08-20"
   },
   {
     "name": "Dark Matter",
@@ -620,7 +678,8 @@
       "2024-05-21"
     ],
     "retired": true,
-    "type": "long"
+    "type": "long",
+    "vintage": "2026-02-24"
   },
   {
     "name": "Shimmering Aurora",
@@ -631,7 +690,8 @@
       "2024-06-04"
     ],
     "retired": true,
-    "type": "long"
+    "type": "long",
+    "vintage": "2025-03-25"
   },
   {
     "name": "Bright Inquisitor",
@@ -645,7 +705,8 @@
       "2024-10-09"
     ],
     "retired": true,
-    "type": "short"
+    "type": "short",
+    "vintage": "2026-02-24"
   },
   {
     "name": "Etherbound",
@@ -656,7 +717,8 @@
       "2024-07-16"
     ],
     "retired": true,
-    "type": "long"
+    "type": "long",
+    "vintage": "2025-03-25"
   },
   {
     "name": "Maguuma",
@@ -668,7 +730,8 @@
       "2025-06-24"
     ],
     "retired": true,
-    "type": "long"
+    "type": "long",
+    "vintage": "2026-02-24"
   },
   {
     "name": "Magical",
@@ -683,7 +746,8 @@
       "2025-06-03"
     ],
     "retired": true,
-    "type": "short"
+    "type": "short",
+    "vintage": "2026-02-24"
   },
   {
     "name": "Venombite",
@@ -695,7 +759,8 @@
       "2025-09-09"
     ],
     "retired": true,
-    "type": "long"
+    "type": "long",
+    "vintage": "2026-02-24"
   },
   {
     "name": "Abyss Stalker",
@@ -707,7 +772,8 @@
       "2025-10-28"
     ],
     "retired": true,
-    "type": "long"
+    "type": "long",
+    "vintage": "2026-05-12"
   },
   {
     "name": "White Tiger",
@@ -724,7 +790,8 @@
       "2026-02-24"
     ],
     "retired": true,
-    "type": "short"
+    "type": "short",
+    "vintage": "2026-08-11"
   },
   {
     "name": "Red Crane",
@@ -736,7 +803,8 @@
       "2026-01-16"
     ],
     "retired": true,
-    "type": "long"
+    "type": "long",
+    "vintage": null
   },
   {
     "name": "Steel Lotus",
@@ -748,7 +816,8 @@
       "2026-04-14"
     ],
     "retired": true,
-    "type": "long"
+    "type": "long",
+    "vintage": null
   },
   {
     "name": "Fox Fire",
@@ -764,7 +833,8 @@
       "2026-06-23"
     ],
     "retired": true,
-    "type": "short"
+    "type": "short",
+    "vintage": null
   },
   {
     "name": "New Kaineng",
@@ -776,7 +846,8 @@
       "2026-06-02"
     ],
     "retired": true,
-    "type": "long"
+    "type": "long",
+    "vintage": null
   },
   {
     "name": "Dokkaebi",
@@ -787,7 +858,8 @@
       "2025-08-19"
     ],
     "retired": false,
-    "type": "long"
+    "type": "long",
+    "vintage": null
   },
   {
     "name": "Snow Garden",
@@ -802,7 +874,8 @@
       "2026-04-14"
     ],
     "retired": false,
-    "type": "short"
+    "type": "short",
+    "vintage": null
   },
   {
     "name": "Reflective Koi",
@@ -813,7 +886,8 @@
       "2025-12-09"
     ],
     "retired": false,
-    "type": "long"
+    "type": "long",
+    "vintage": null
   },
   {
     "name": "Collapsing Star",
@@ -824,7 +898,8 @@
       "2026-02-24"
     ],
     "retired": false,
-    "type": "long"
+    "type": "long",
+    "vintage": null
   },
   {
     "name": "Paladin's Decree",
@@ -838,7 +913,8 @@
       "2026-03-17"
     ],
     "retired": false,
-    "type": "short"
+    "type": "short",
+    "vintage": null
   },
   {
     "name": "Vinelord Edgebloom",
@@ -849,7 +925,8 @@
       "2026-07-15"
     ],
     "retired": false,
-    "type": "long"
+    "type": "long",
+    "vintage": null
   },
   {
     "name": "Thundercrag",
@@ -859,7 +936,8 @@
       "2025-11-18"
     ],
     "retired": false,
-    "type": "long"
+    "type": "long",
+    "vintage": null
   },
   {
     "name": "Necrotic Essence",
@@ -871,7 +949,8 @@
       "2026-08-11"
     ],
     "retired": false,
-    "type": "short"
+    "type": "short",
+    "vintage": null
   },
   {
     "name": "Shadow Chevalier",
@@ -880,7 +959,8 @@
       "2026-06-23"
     ],
     "retired": false,
-    "type": "long"
+    "type": "long",
+    "vintage": null
   },
   {
     "name": "Chromatic Assassin",
@@ -890,7 +970,8 @@
       "2026-05-12"
     ],
     "retired": false,
-    "type": "long"
+    "type": "long",
+    "vintage": null
   },
   {
     "name": "Void Corrupted",
@@ -902,7 +983,8 @@
       "2026-07-15"
     ],
     "retired": false,
-    "type": "short"
+    "type": "short",
+    "vintage": null
   },
   {
     "name": "Mystical Beast",
@@ -912,7 +994,8 @@
       "2026-08-11"
     ],
     "retired": false,
-    "type": "long"
+    "type": "long",
+    "vintage": null
   },
   {
     "name": "Foefire",
@@ -921,7 +1004,8 @@
       "2025-10-07"
     ],
     "retired": false,
-    "type": "long"
+    "type": "long",
+    "vintage": null
   },
   {
     "name": "Dragon Essence",
@@ -932,7 +1016,8 @@
       "2026-06-02"
     ],
     "retired": false,
-    "type": "short"
+    "type": "short",
+    "vintage": null
   },
   {
     "name": "Imperial Everbloom",
@@ -941,14 +1026,16 @@
       "2026-02-03"
     ],
     "retired": false,
-    "type": "long"
+    "type": "long",
+    "vintage": null
   },
   {
     "name": "Shade-Touched",
     "added": "2025-09-09",
     "appearances": [],
     "retired": false,
-    "type": "long"
+    "type": "long",
+    "vintage": null
   },
   {
     "name": "Calligrapher's",
@@ -957,27 +1044,31 @@
       "2026-05-12"
     ],
     "retired": false,
-    "type": "short"
+    "type": "short",
+    "vintage": null
   },
   {
     "name": "Painter's Brilliance",
     "added": "2026-02-03",
     "appearances": [],
     "retired": false,
-    "type": "long"
+    "type": "long",
+    "vintage": null
   },
   {
     "name": "Synergetics",
     "added": "2026-05-12",
     "appearances": [],
     "retired": false,
-    "type": "long"
+    "type": "long",
+    "vintage": null
   },
   {
     "name": "Primeval",
     "added": "2026-08-11",
     "appearances": [],
     "retired": false,
-    "type": "short"
+    "type": "short",
+    "vintage": null
   }
 ]

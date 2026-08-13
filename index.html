@@ -13,6 +13,7 @@
     --short:#4fae94; --short-bg:#132621; --short-text:#8fd6c1;
     --unknown:#8b7d55; --unknown-bg:#2a2618;
     --danger:#a5402f;
+    --vintage:#a37fc9; --vintage-bg:#241a30; --vintage-text:#cdb3ea;
     --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
     --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-num: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
@@ -59,6 +60,10 @@
   .type-long{background:var(--long-bg);color:var(--long-text);}
   .type-short{background:var(--short-bg);color:var(--short-text);}
   .type-unknown{background:var(--unknown-bg);color:var(--unknown);}
+  .vintage-tag{display:inline-flex;align-items:center;gap:5px;font-size:10px;letter-spacing:0.3px;text-transform:uppercase;padding:2px 7px;border-radius:3px;font-family:var(--font-num);background:var(--vintage-bg);color:var(--vintage-text);white-space:nowrap;}
+  .vintage-tag::before{content:"◆";font-size:8px;color:var(--vintage);}
+  .vintage-dash{color:var(--cream-faint);font-family:var(--font-num);}
+  .timeline-dot.vintage{background:var(--vintage);border-radius:2px;transform:translate(-50%,-50%) rotate(45deg);width:8px;height:8px;}
 
   .timeline-controls{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 18px;margin-bottom:14px;}
   .control-row{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
@@ -211,7 +216,7 @@ async function loadSets(){
     const fresh = await fetchSets();
     sets = fresh.map(s=>({
       name: s.name, added: s.added, appearances: s.appearances||[],
-      retired: !!s.retired, type: s.type ?? null
+      retired: !!s.retired, type: s.type ?? null, vintage: s.vintage || null
     }));
     dataLoadError = null;
   }catch(e){
@@ -406,6 +411,10 @@ function typeTag(type){
   if(type==='short') return '<span class="type-tag type-short">short</span>';
   return '<span class="type-tag type-unknown">unknown</span>';
 }
+function vintageTag(vintageStr){
+  if(!vintageStr) return '<span class="vintage-dash">—</span>';
+  return `<span class="vintage-tag" title="Went vintage on ${fmtDisplay(toUTC(vintageStr))}">Vintage ${fmtDisplay(toUTC(vintageStr))}</span>`;
+}
 function overdueText(daysDiff){
   if(daysDiff>0) return `<b>${daysDiff}d</b> overdue`;
   return `due in <b>${Math.abs(daysDiff)}d</b>`;
@@ -421,6 +430,11 @@ function computeFullExtent(stats, refDate){
       const p = predictSet(s, stats, refDate);
       if(p.predicted<minD) minD=p.predicted;
       if(p.predicted>maxD) maxD=p.predicted;
+    }
+    if(s.vintage){
+      const vd = toUTC(s.vintage);
+      if(vd<minD) minD=vd;
+      if(vd>maxD) maxD=vd;
     }
   });
   minD = new Date(minD.getTime()-20*DAY);
@@ -462,6 +476,7 @@ function renderFullTimeline(stats, refDate, ext, dispMin, dispMax){
     const app=(x.s.appearances||[]).map(toUTC);
     if(app.some(d=>d>=dispMin && d<=dispMax)) return true;
     if(!x.retired && x.p.predicted>=dispMin && x.p.predicted<=dispMax) return true;
+    if(x.s.vintage){ const vd=toUTC(x.s.vintage); if(vd>=dispMin && vd<=dispMax) return true; }
     return false;
   }
 
@@ -483,6 +498,7 @@ function renderFullTimeline(stats, refDate, ext, dispMin, dispMax){
       <span class="legend-item"><span class="legend-dot" style="background:var(--short)"></span>short</span>
       <span class="legend-item"><span class="legend-dot" style="background:var(--unknown)"></span>unknown</span>
       <span class="legend-item"><span style="width:8px;height:8px;border-radius:50%;border:1.5px dashed var(--gold-bright);display:inline-block;"></span>predicted next</span>
+      <span class="legend-item"><span style="width:8px;height:8px;background:var(--vintage);display:inline-block;transform:rotate(45deg);"></span>went vintage</span>
       <span class="legend-item"><span style="width:14px;height:2px;background:var(--long);display:inline-block;"></span>history</span>
       <span class="legend-item"><span style="width:14px;height:0;border-top:2px dashed var(--long);display:inline-block;"></span>to predicted</span>
       <span class="legend-item"><span style="width:1px;height:10px;background:var(--gold-bright);display:inline-block;"></span>reference date</span>
@@ -511,6 +527,12 @@ function renderFullTimeline(stats, refDate, ext, dispMin, dispMax){
     });
     if(!x.retired){
       dots += `<div class="timeline-dot predicted" style="left:${clamp(pct(p.predicted),0,100)}%" title="predicted: ${fmtDisplay(p.predicted)}"></div>`;
+    }
+    if(s.vintage){
+      const vp = pct(toUTC(s.vintage));
+      if(vp>=0 && vp<=100){
+        dots += `<div class="timeline-dot vintage" style="left:${vp}%" title="went vintage: ${fmtDisplay(toUTC(s.vintage))}"></div>`;
+      }
     }
     return `<div class="timeline-row ${x.retired?'is-retired':''}" onclick="toggleExpand('${escapeAttr(s.name)}')">
       <div class="timeline-label" title="${escapeHtml(s.name)}">${escapeHtml(s.name)}</div>
@@ -552,6 +574,7 @@ function renderDetailPanel(s, p){
       <span>Release date: <b>${s.added?fmtDisplay(toUTC(s.added)):'—'}</b></span>
       <span>Status: <b>${s.retired?'Retired':'Active'}</b></span>
       <span>Type: <b>${p?p.type:(s.type||'unknown')}</b>${s.type?' (set in data.json)':(patternType(s)?' (from rotation pattern)':' (inferred)')}</span>
+      <span>Vintage: <b>${s.vintage?fmtDisplay(toUTC(s.vintage)):'Not vintage'}</b></span>
     </div>
     <div class="chip-list">${chips}</div>
   </div>`;
@@ -658,7 +681,7 @@ function render(){
 
     html += `<div class="section-head"><h2>Full active roster</h2><span class="hint">oldest release date first — click a name for details</span></div>`;
     html += `<table class="roster"><thead><tr>
-      <th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th class="num">Est. next</th><th>Likelihood</th><th>Price (buy / sell)</th>
+      <th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th class="num">Est. next</th><th>Likelihood</th><th>Price (buy / sell)</th><th>Vintage</th>
     </tr></thead><tbody>`;
     chronological.forEach(x=>{
       const p=x.p, s=x.s;
@@ -670,21 +693,23 @@ function render(){
         <td class="num">${fmtDisplay(p.predicted)}</td>
         <td><div class="pct-bar-wrap"><div class="pct-bar-track"><div class="pct-bar-fill" style="width:${clamp(x.pct*4,2,100)}%"></div></div><span class="pct-num">${x.pct.toFixed(1)}%</span></div></td>
         <td class="price">${priceCellHtml(s.name)}</td>
+        <td>${vintageTag(s.vintage)}</td>
       </tr>
-      ${expandedName===s.name ? `<tr><td colspan="7">${renderDetailPanel(s,p)}</td></tr>` : ''}
+      ${expandedName===s.name ? `<tr><td colspan="8">${renderDetailPanel(s,p)}</td></tr>` : ''}
       `;
     });
     html += `</tbody></table>`;
 
     if(retiredCount){
-      html += `<div class="section-head" style="margin-top:32px;"><h2>Retired sets</h2><span class="hint">${listShowRetired?`historical release order — click a name for details`:`${retiredCount} retired sets folded`}</span></div>`;
+      const vintageCount = sets.filter(s=>s.vintage).length;
+      html += `<div class="section-head" style="margin-top:32px;"><h2>Retired sets</h2><span class="hint">${listShowRetired?`historical release order — click a name for details${vintageCount?` · ${vintageCount} have gone vintage`:''}`:`${retiredCount} retired sets folded`}</span></div>`;
       html += `<div style="margin-bottom:14px;"><button class="small" onclick="toggleListRetired()">${listShowRetired?'Fold retired sets':`Show ${retiredCount} retired sets`}</button></div>`;
       if(listShowRetired){
         const retiredRows = sets.filter(s=>s.retired)
           .map(s=>({s, p:predictSet(s, stats, refDate)}))
           .sort((a,b)=>toUTC(a.s.added)-toUTC(b.s.added));
         html += `<table class="roster"><thead><tr>
-          <th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th>Price (buy / sell)</th>
+          <th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th>Price (buy / sell)</th><th>Vintage</th>
         </tr></thead><tbody>`;
         retiredRows.forEach(x=>{
           const p=x.p, s=x.s;
@@ -694,8 +719,9 @@ function render(){
             <td class="num">${p.count}</td>
             <td class="num">${p.lastDate?fmtDisplay(p.lastDate):'—'}</td>
             <td class="price">${priceCellHtml(s.name)}</td>
+            <td>${vintageTag(s.vintage)}</td>
           </tr>
-          ${expandedName===s.name ? `<tr><td colspan="5">${renderDetailPanel(s,p)}</td></tr>` : ''}
+          ${expandedName===s.name ? `<tr><td colspan="6">${renderDetailPanel(s,p)}</td></tr>` : ''}
           `;
         });
         html += `</tbody></table>`;
