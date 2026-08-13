@@ -416,8 +416,10 @@ function buildPredictions(){
     const pool = scored.filter(x=>x.p.type===t);
     const totalScore = pool.reduce((a,b)=>a+b.p.score,0)||1;
     pool.forEach(x=>x.pct = x.p.score/totalScore*100);
+    const maxPct = Math.max(...pool.map(x=>x.pct), 0.0001);
+    pool.forEach(x=>x.barPct = x.pct/maxPct*100);
   });
-  scored.filter(x=>x.p.type!=='long' && x.p.type!=='short').forEach(x=>x.pct = 0);
+  scored.filter(x=>x.p.type!=='long' && x.p.type!=='short').forEach(x=>{ x.pct = 0; x.barPct = 0; });
   return {scored, stats, refDate};
 }
 
@@ -721,7 +723,7 @@ function render(){
         <td class="num">${p.count}</td>
         <td class="num">${p.lastDate?fmtDisplay(p.lastDate):'—'}</td>
         <td class="num">${fmtDisplay(p.predicted)}</td>
-        <td><div class="pct-bar-wrap"><div class="pct-bar-track"><div class="pct-bar-fill type-${p.type}" style="width:${clamp(x.pct*4,2,100)}%"></div></div><span class="pct-num type-${p.type}">${x.pct.toFixed(1)}%</span></div></td>
+        <td><div class="pct-bar-wrap"><div class="pct-bar-track"><div class="pct-bar-fill type-${p.type}" style="width:${clamp(x.barPct,2,100)}%"></div></div><span class="pct-num type-${p.type}">${x.pct.toFixed(1)}%</span></div></td>
         <td class="price">${priceCellHtml(s.name)}</td>
       </tr>
       ${expandedName===s.name ? `<tr><td colspan="7">${renderDetailPanel(s,p)}</td></tr>` : ''}
