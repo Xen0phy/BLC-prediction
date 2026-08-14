@@ -262,6 +262,19 @@ function daysBetween(a,b){ return Math.round((b-a)/DAY); }
 function fmtDisplay(d){ return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}); }
 function mean(arr){ return arr.reduce((a,b)=>a+b,0)/arr.length; }
 function stdev(arr){ if(arr.length<2) return 0; const m=mean(arr); return Math.sqrt(mean(arr.map(x=>(x-m)**2))); }
+function median(arr){
+  const a=arr.slice().sort((x,y)=>x-y); const n=a.length;
+  return n%2 ? a[(n-1)/2] : (a[n/2-1]+a[n/2])/2;
+}
+// Median + scaled MAD (median absolute deviation) — a robust "center and spread" pair that
+// resists single outliers, unlike mean/stdev. Used for debut-timing stats since one-off events
+// (e.g. a set unexpectedly overstaying its rotation slot and delaying whatever debuts next)
+// otherwise skew the estimate for every set that comes after.
+function robustSpread(arr){
+  const m=median(arr);
+  const mad=median(arr.map(x=>Math.abs(x-m)));
+  return 1.4826*mad; // scale factor makes MAD comparable to stdev for a normal distribution
+}
 function sigmoid(z){ return 1/(1+Math.exp(-z)); }
 function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
 function todayUTC(){ const n=new Date(); return new Date(Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate())); }
@@ -388,16 +401,14 @@ function showStatus(msg, isErr){
 function computeGlobalStats(){
   const longGaps=[], shortGaps=[];
   let longCount=0, shortCount=0;
-  const debutDays=[];
-  const debutDaysByType={long:[],short:[]};
+  const debutEntries=[]; // {added, type, d} — one entry per set's first-ever BLC appearance
   for(const s of sets){
     const app=(s.appearances||[]).map(toUTC).sort((a,b)=>a-b);
     if(app.length && s.added){
       const added=toUTC(s.added);
       const d=daysBetween(added, app[0]);
       if(d>0 && app[0]>=CUTOFF){
-        debutDays.push(d);
-        if(s.type==='long' || s.type==='short') debutDaysByType[s.type].push(d);
+        debutEntries.push({added, type:s.type, d});
       }
     }
     if(app.length<2) continue;
@@ -406,6 +417,23 @@ function computeGlobalStats(){
     if(s.type==='long'){ longGaps.push(...gaps); longCount++; }
     else if(s.type==='short'){ shortGaps.push(...gaps); shortCount++; }
   }
+  debutEntries.sort((a,b)=>a.added-b.added);
+
+  // How long a set takes to debut in BLC after release (added -> first appearance) has
+  // tightened noticeably since the system's early days (2019-2021 debuts routinely took
+  // 600-800+ days; recent ones settle to ~150-190d for Rare, ~280-360d for Uncommon), so
+  // averaging over all history badly overstates how uncertain a fresh set's debut timing is.
+  // A trailing window of the most recent debuts, summarized with median + robust MAD instead
+  // of mean/stdev, tracks the current cadence and won't get thrown off by a single one-off
+  // delay (e.g. a set unexpectedly overstaying its slot and bumping whatever comes next).
+  const DEBUT_WINDOW = 8;
+  function debutStats(filterFn){
+    const vals = debutEntries.filter(filterFn).slice(-DEBUT_WINDOW).map(e=>e.d);
+    if(vals.length===0) return null;
+    if(vals.length<4) return {mean:mean(vals), std:null};
+    return {mean:median(vals), std:robustSpread(vals)};
+  }
+
   const longMean = longGaps.length? mean(longGaps):353;
   const longStd = Math.max(20, longGaps.length>3? stdev(longGaps):28);
   const shortMean = shortGaps.length? mean(shortGaps):179;
@@ -413,12 +441,15 @@ function computeGlobalStats(){
   const totalTyped = longCount+shortCount;
   const priorLong = totalTyped? longCount/totalTyped : 0.6;
   const priorShort = 1-priorLong;
-  const debutMean = debutDays.length? mean(debutDays):380;
-  const debutStd = Math.max(40, debutDays.length>3? stdev(debutDays):150);
-  const debutLongMean = debutDaysByType.long.length? mean(debutDaysByType.long):debutMean;
-  const debutLongStd = Math.max(40, debutDaysByType.long.length>3? stdev(debutDaysByType.long):debutStd);
-  const debutShortMean = debutDaysByType.short.length? mean(debutDaysByType.short):debutMean;
-  const debutShortStd = Math.max(40, debutDaysByType.short.length>3? stdev(debutDaysByType.short):debutStd);
+  const debutAllStats = debutStats(()=>true) || {mean:380, std:null};
+  const debutMean = debutAllStats.mean;
+  const debutStd = Math.max(40, debutAllStats.std ?? 150);
+  const debutLongStats = debutStats(e=>e.type==='long') || {mean:debutMean, std:null};
+  const debutLongMean = debutLongStats.mean;
+  const debutLongStd = Math.max(40, debutLongStats.std ?? debutStd);
+  const debutShortStats = debutStats(e=>e.type==='short') || {mean:debutMean, std:null};
+  const debutShortMean = debutShortStats.mean;
+  const debutShortStd = Math.max(40, debutShortStats.std ?? debutStd);
   return {longMean,longStd,shortMean,shortStd,priorLong,priorShort,debutMean,debutStd,debutLongMean,debutLongStd,debutShortMean,debutShortStd};
 }
 
