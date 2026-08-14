@@ -34,7 +34,16 @@
   }
   *{box-sizing:border-box;}
   body{margin:0;background:var(--bg);color:var(--cream);font-family:var(--font-body);}
-  .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 60px;}
+  .wrap{max-width:1500px;margin:0 auto;padding:28px 24px 60px;}
+  .layout-grid{display:grid;grid-template-columns:1fr;gap:32px;align-items:start;}
+  @media (min-width:980px){
+    .layout-grid{grid-template-columns:320px 1fr;}
+    .sidebar{position:sticky;top:20px;}
+  }
+  @media (max-width:979px){
+    .layout-grid[data-tab="timeline"] .sidebar{display:none;}
+  }
+  .sidebar .predict-grid{grid-template-columns:1fr;}
 
   .masthead{display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:20px;}
   .masthead h1{font-family:var(--font-display);font-size:var(--fs-7);font-weight:600;margin:0;color:var(--gold);}
@@ -707,7 +716,21 @@ function render(){
     html += `<div class="status-msg show status-err" style="position:static;margin-bottom:20px;">Could not load data.json (${escapeHtml(dataLoadError)}). Make sure it sits next to index.html and the page is served over http/https, not opened directly as a file.</div>`;
   }
 
-  html += `<div class="tabs">
+  // "Next rotation — by slot" lives in the sidebar and stays visible across both tabs on
+  // desktop (enough horizontal room for a persistent column); on narrow screens it's hidden
+  // via CSS while the Timeline tab is active, matching the old single-column mobile flow.
+  let sidebarHtml = `<h2>Next rotation — by slot</h2>
+    <div class="hint" style="margin:-6px 0 14px;">Only one Uncommon set and one Rare set occupy the chest at a time, so each slot's odds are ranked against its own slot only.</div>`;
+  if(shortRanked.length===0 && longRanked.length===0){
+    sidebarHtml += `<div style="color:var(--cream-dim);font-size:var(--fs-4);padding:16px 0;">No active sets in data.json.</div>`;
+  } else {
+    sidebarHtml += `<div class="predict-grid">`;
+    sidebarHtml += slotCard('short', 'Rare slot', shortRanked);
+    sidebarHtml += slotCard('long', 'Uncommon slot', longRanked);
+    sidebarHtml += `</div>`;
+  }
+
+  let mainHtml = `<div class="tabs">
     <button class="tab-btn ${activeTab==='list'?'active':''}" onclick="switchTab('list')">List</button>
     <button class="tab-btn ${activeTab==='timeline'?'active':''}" onclick="switchTab('timeline')">Timeline</button>
   </div>`;
@@ -722,10 +745,10 @@ function render(){
     const endOffset = clamp(daysBetween(tlExt.min, dispMax), 0, totalDays);
     const startPct = startOffset/totalDays*100, endPct = endOffset/totalDays*100;
 
-    html += `<h2>Rotation timeline</h2>
+    mainHtml += `<h2>Rotation timeline</h2>
     <div class="hint" style="margin:-6px 0 14px;">Active sets first, newest release date on top; retired sets follow the divider, also newest release date first. Click a name for details.</div>`;
 
-    html += `<div class="timeline-controls">
+    mainHtml += `<div class="timeline-controls">
       <div class="control-row">
         <button class="small" onclick="fitRangeToVisible()">Fit range to ${foldRetired && retiredCount ? 'active sets' : 'visible'}</button>
         ${(rangeStart||rangeEnd) ? '<button class="small" onclick="resetRange()">Reset date range</button>' : ''}
@@ -743,19 +766,8 @@ function render(){
       </div>
     </div>`;
 
-    html += `<div class="timeline-block">${renderFullTimeline(stats, refDate, tlExt, dispMin, dispMax)}</div>`;
+    mainHtml += `<div class="timeline-block">${renderFullTimeline(stats, refDate, tlExt, dispMin, dispMax)}</div>`;
   } else {
-    html += `<h2>Next rotation — by slot</h2>
-    <div class="hint" style="margin:-6px 0 14px;">Only one Uncommon set and one Rare set occupy the chest at a time, so each slot's odds are ranked against its own slot only.</div>`;
-    if(shortRanked.length===0 && longRanked.length===0){
-      html += `<div style="color:var(--cream-dim);font-size:var(--fs-4);padding:16px 0;">No active sets in data.json.</div>`;
-    } else {
-      html += `<div class="predict-grid">`;
-      html += slotCard('short', 'Rare slot', shortRanked);
-      html += slotCard('long', 'Uncommon slot', longRanked);
-      html += `</div>`;
-    }
-
     if(pricesStatus==='loaded'){
       let activeBuy=0, activeSell=0;
       chronological.forEach(x=>{
@@ -772,7 +784,7 @@ function render(){
         if(p.sell>0 && (!cheapestSell || p.sell<cheapestSell.val)) cheapestSell={name:s.name, val:p.sell};
       });
       const collectedNote = collectedSets.size ? ` — ${collectedSets.size} collected set${collectedSets.size!==1?'s':''} excluded` : '';
-      html += `<div class="price-summary">
+      mainHtml += `<div class="price-summary">
         <div class="price-summary-grid">
           <div class="ps-col">
             <div class="ps-title">Active Roster</div>
@@ -793,14 +805,14 @@ function render(){
       </div>`;
     }
 
-    html += `<div class="section-head"><h2>Full active roster</h2><span class="hint">oldest release date first — click a name for details</span></div>`;
-    html += `<table class="roster"><thead><tr>
+    mainHtml += `<div class="section-head"><h2>Full active roster</h2><span class="hint">oldest release date first — click a name for details</span></div>`;
+    mainHtml += `<table class="roster"><thead><tr>
       <th class="check-col"></th><th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th class="num">Est. next</th><th>Likelihood</th><th>Price (buy / sell)</th>
     </tr></thead><tbody>`;
     chronological.forEach(x=>{
       const p=x.p, s=x.s;
       const isCollected = collectedSets.has(s.name);
-      html += `<tr class="${isCollected?'is-collected':''}">
+      mainHtml += `<tr class="${isCollected?'is-collected':''}">
         <td class="check-col" onclick="toggleCollected('${escapeAttr(s.name)}', event)"><input type="checkbox" class="collected-check" ${isCollected?'checked':''} onclick="toggleCollected('${escapeAttr(s.name)}', event)" title="Mark as collected"></td>
         <td class="name" onclick="toggleExpand('${escapeAttr(s.name)}')">${escapeHtml(s.name)}</td>
         <td>${typeTag(p.type)}</td>
@@ -813,11 +825,11 @@ function render(){
       ${expandedName===s.name ? `<tr><td colspan="8">${renderDetailPanel(s,p)}</td></tr>` : ''}
       `;
     });
-    html += `</tbody></table>`;
+    mainHtml += `</tbody></table>`;
 
     if(retiredCount){
       const vintageCount = sets.filter(s=>s.vintage).length;
-      html += `<div class="section-head retired-toggle-row" style="margin-top:32px;" onclick="toggleListRetired()" role="button" tabindex="0">
+      mainHtml += `<div class="section-head retired-toggle-row" style="margin-top:32px;" onclick="toggleListRetired()" role="button" tabindex="0">
         <h2><span class="divider-arrow">${listShowRetired ? '&#9662;' : '&#9656;'}</span>Retired sets</h2>
         <span class="hint">${listShowRetired?`newest release date first — click a name for details${vintageCount?` · ${vintageCount} have gone vintage`:''}`:'click to show'}</span>
       </div>`;
@@ -825,13 +837,13 @@ function render(){
         const retiredRows = sets.filter(s=>s.retired)
           .map(s=>({s, p:predictSet(s, stats, refDate)}))
           .sort((a,b)=>toUTC(b.s.added)-toUTC(a.s.added));
-        html += `<table class="roster"><thead><tr>
+        mainHtml += `<table class="roster"><thead><tr>
           <th class="check-col"></th><th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th>Price (buy / sell)</th><th>Vintage</th>
         </tr></thead><tbody>`;
         retiredRows.forEach(x=>{
           const p=x.p, s=x.s;
           const isCollected = collectedSets.has(s.name);
-          html += `<tr class="${isCollected?'is-collected':''}">
+          mainHtml += `<tr class="${isCollected?'is-collected':''}">
             <td class="check-col" onclick="toggleCollected('${escapeAttr(s.name)}', event)"><input type="checkbox" class="collected-check" ${isCollected?'checked':''} onclick="toggleCollected('${escapeAttr(s.name)}', event)" title="Mark as collected"></td>
             <td class="name" onclick="toggleExpand('${escapeAttr(s.name)}')">${escapeHtml(s.name)}</td>
             <td>${typeTag(p.type)}</td>
@@ -843,10 +855,15 @@ function render(){
           ${expandedName===s.name ? `<tr><td colspan="7">${renderDetailPanel(s,p)}</td></tr>` : ''}
           `;
         });
-        html += `</tbody></table>`;
+        mainHtml += `</tbody></table>`;
       }
     }
   }
+
+  html += `<div class="layout-grid" data-tab="${activeTab}">
+    <div class="sidebar">${sidebarHtml}</div>
+    <div class="main-col">${mainHtml}</div>
+  </div>`;
 
   html += `<div class="footnote" style="margin-top:24px;">
     Each set's rotation slot — Uncommon or Rare — comes from the <code>"type"</code> field in <code>data.json</code> (<code>"long"</code>/<code>"short"</code> internally). Uncommon sets average ~${Math.round(stats.longMean)}d between appearances and Rare sets ~${Math.round(stats.shortMean)}d, both recomputed live from typed sets' actual gaps. Sets without a <code>"type"</code> in the file are treated as unknown and predicted using a blend of both, and are excluded from the slot rankings above since they can't be assigned to either. Appearances before 9 Nov 2021 predate the current system and are excluded from the gap statistics. Likelihood reflects how close the reference date is to each set's projected next appearance relative to its slot peers — it doesn't factor in how many times a set has already appeared toward its typical retirement, so use the appearance count to judge that yourself.
