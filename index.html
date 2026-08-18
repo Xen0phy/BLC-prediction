@@ -140,6 +140,9 @@
   .timeline-dot.short{background:var(--short);}
   .timeline-dot.unknown{background:var(--unknown);}
   .timeline-dot.predicted{background:transparent;border:1.5px dashed var(--gold);width:11px;height:11px;}
+  .timeline-dot.predicted.long{border-color:var(--long);}
+  .timeline-dot.predicted.short{border-color:var(--short);}
+  .timeline-dot.predicted.unknown{border-color:var(--unknown);}
   .timeline-connector{position:absolute;top:50%;height:2px;transform:translateY(-50%);}
   .timeline-connector.long{background:var(--long);}
   .timeline-connector.short{background:var(--short);}
@@ -665,7 +668,7 @@ function renderFullTimeline(stats, refDate, ext, dispMin, dispMax){
       dots += `<div class="timeline-dot ${p.type}" style="left:${dp}%" title="${fmtDisplay(d)}"></div>`;
     });
     if(!x.retired){
-      dots += `<div class="timeline-dot predicted" style="left:${clamp(pct(p.predicted),0,100)}%" title="predicted: ${fmtDisplay(p.predicted)}"></div>`;
+      dots += `<div class="timeline-dot predicted ${p.type}" style="left:${clamp(pct(p.predicted),0,100)}%" title="predicted: ${fmtDisplay(p.predicted)}"></div>`;
     }
     if(s.vintage){
       const vp = pct(toUTC(s.vintage));
