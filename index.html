@@ -715,7 +715,7 @@ function renderDetailPanel(s, p){
     <div class="detail-row">
       <span>Release date: <b>${s.added?fmtDisplay(toUTC(s.added)):'—'}</b></span>
       <span>Status: <b>${s.retired?'Retired':'Active'}</b></span>
-      <span>Type: <b>${(()=>{const t=p?p.type:(s.type||'unknown'); return t==='long'?'Uncommon':t==='short'?'Rare':'unknown';})()}</b>${s.type?' (set in data.json)':' (not set — treated as unknown)'}</span>
+      <span>Type: <b>${(()=>{const t=p?p.type:(s.type||'unknown'); return t==='long'?'Uncommon':t==='short'?'Rare':'unknown';})()}</b></span>
       <span>Vintage: <b>${s.vintage?fmtDisplay(toUTC(s.vintage)):'Not vintage'}</b></span>
     </div>
     <div class="chip-list">${chips}</div>
