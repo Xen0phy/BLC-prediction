@@ -1,0 +1,50 @@
+name: Check BLC rotation
+
+on:
+  schedule:
+    # Wed 00:00 UTC — primary check, gives leeway past the usual Tuesday patch.
+    - cron: '0 0 * * 3'
+    # Thu 00:00 UTC — catch-up, only makes changes if Wednesday's run found nothing
+    # (the wiki was slow to update, patch landed late, etc).
+    - cron: '0 0 * * 4'
+  workflow_dispatch:
+    inputs:
+      force_date:
+        description: 'Override "today" (YYYY-MM-DD) — for testing the Tuesday-dating logic'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  check-rotation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check wiki for new rotation / retirements
+        env:
+          FORCE_DATE: ${{ github.event.inputs.force_date }}
+        run: node scripts/check-wiki-rotation.js
+
+      # Deliberately no [skip ci] here: this push needs to trigger
+      # update-readme.yml's own `push: paths:` trigger so the README stays
+      # in sync with whatever this step just found.
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet data.json skin-ids.json; then
+            echo "No changes to commit."
+          else
+            git add data.json skin-ids.json
+            git commit -m "Auto-update BLC rotation data"
+            git push
+          fi

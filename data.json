@@ -1,5 +1,28 @@
 [
   {
+    "name": "Shadow of the Mad King",
+    "added": "2012-10-22",
+    "appearances": [
+      "2017-10-17",
+      "2018-10-16",
+      "2020-10-13"
+    ],
+    "retired": true,
+    "type": null,
+    "vintage": "2021-11-09"
+  },
+  {
+    "name": "Winter's",
+    "added": "2012-12-14",
+    "appearances": [
+      "2017-12-12",
+      "2020-12-15"
+    ],
+    "retired": true,
+    "type": null,
+    "vintage": "2021-11-09"
+  },
+  {
     "name": "Fused",
     "added": "2013-03-26",
     "appearances": [
@@ -50,6 +73,19 @@
       "2016-12-13",
       "2020-01-14",
       "2021-05-25"
+    ],
+    "retired": true,
+    "type": null,
+    "vintage": "2021-11-09"
+  },
+  {
+    "name": "Blood and Madness",
+    "added": "2013-10-15",
+    "appearances": [
+      "2017-10-17",
+      "2018-10-16",
+      "2019-10-15",
+      "2020-10-13"
     ],
     "retired": true,
     "type": null,
