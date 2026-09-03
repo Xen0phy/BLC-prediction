@@ -784,7 +784,6 @@ function render(){
     mainHtml += `<div class="timeline-controls">
       <div class="control-row">
         <button class="small" onclick="fitRangeToActive()">Fit range to active sets</button>
-        ${(rangeStart||rangeEnd) ? '<button class="small" onclick="resetRange()">Reset date range</button>' : ''}
         <span class="hint">Drag the handles below to zoom the timeline to a date range.</span>
       </div>
       <div class="range-slider-wrap">
@@ -954,7 +953,6 @@ function attachRangeSliderHandlers(fullMin, fullMax){
   endInput.addEventListener('change', commit);
 }
 
-function resetRange(){ rangeStart=null; rangeEnd=null; render(); }
 function toggleFoldRetired(){ foldRetired=!foldRetired; render(); }
 function fitRangeToActive(){
   const refDate = getRefDate();
