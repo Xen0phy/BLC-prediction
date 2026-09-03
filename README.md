@@ -9,7 +9,7 @@ _Generated 2026-09-03 — prices live from the GW2 API_
 
 **1. Paladin's Decree** — 45.8% (short)
 Last seen: 17 Mar 2026 · Estimated next: 01 Sept 2026 (**2d** overdue)
-<br>Buy total: **345g 54s 7c** &nbsp;·&nbsp; Sell total: **554g 86s 31c**
+<br>Buy total: **346g 54s 7c** &nbsp;·&nbsp; Sell total: **554g 86s 30c**
 
 **2. Dokkaebi** — 41.2% (long)
 Last seen: 19 Aug 2025 · Estimated next: 26 Jul 2026 (**38d** overdue)
