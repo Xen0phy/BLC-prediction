@@ -578,8 +578,8 @@ function computeFullExtent(stats, refDate){
   return {min:minD, max:maxD};
 }
 
-function computeVisibleExtent(stats, refDate){
-  const relevant = foldRetired ? sets.filter(s=>!s.retired) : sets;
+function computeActiveExtent(stats, refDate){
+  const relevant = sets.filter(s=>!s.retired);
   if(relevant.length===0) return computeFullExtent(stats, refDate);
   let minD = refDate, maxD = refDate;
   relevant.forEach(s=>{
@@ -638,13 +638,19 @@ function renderFullTimeline(stats, refDate, ext, dispMin, dispMax){
       <span class="legend-item"><span style="width:14px;height:2px;background:var(--long);display:inline-block;"></span>history</span>
       <span class="legend-item"><span style="width:14px;height:0;border-top:2px dashed var(--long);display:inline-block;"></span>to predicted</span>
       <span class="legend-item"><span style="width:1px;height:10px;background:var(--gold);display:inline-block;"></span>reference date</span>
+      <span class="legend-item"><span style="width:1px;height:10px;background:var(--cream-dim);display:inline-block;"></span>today</span>
     </div>
   </div>`;
+
+  const todayD = todayUTC();
 
   function row(x){
     const s=x.s, p=x.p;
     const app=(s.appearances||[]).map(toUTC).sort((a,b)=>a-b);
     let dots = `<div class="axis-line"></div>${yearLines}`;
+    if(daysBetween(todayD, refDate)!==0){
+      dots += `<div class="timeline-refline today" style="left:${clamp(pct(todayD),0,100)}%" title="today: ${fmtDisplay(todayD)}"></div>`;
+    }
     dots += `<div class="timeline-refline next-update" style="left:${clamp(pct(refDate),0,100)}%"></div>`;
     if(app.length>1){
       const l1=clamp(pct(app[0]),0,100), l2=clamp(pct(app[app.length-1]),0,100);
@@ -765,7 +771,7 @@ function render(){
   if(activeTab==='timeline'){
     tlExt = computeFullExtent(stats, refDate);
     const totalDays = Math.max(1, daysBetween(tlExt.min, tlExt.max));
-    const defaultExt = foldRetired ? computeVisibleExtent(stats, refDate) : tlExt;
+    const defaultExt = foldRetired ? computeActiveExtent(stats, refDate) : tlExt;
     const dispMin = rangeStart ? toUTC(rangeStart) : defaultExt.min;
     const dispMax = rangeEnd ? toUTC(rangeEnd) : defaultExt.max;
     const startOffset = clamp(daysBetween(tlExt.min, dispMin), 0, totalDays);
@@ -777,7 +783,7 @@ function render(){
 
     mainHtml += `<div class="timeline-controls">
       <div class="control-row">
-        <button class="small" onclick="fitRangeToVisible()">Fit range to ${foldRetired && retiredCount ? 'active sets' : 'visible'}</button>
+        <button class="small" onclick="fitRangeToActive()">Fit range to active sets</button>
         ${(rangeStart||rangeEnd) ? '<button class="small" onclick="resetRange()">Reset date range</button>' : ''}
         <span class="hint">Drag the handles below to zoom the timeline to a date range.</span>
       </div>
@@ -793,7 +799,7 @@ function render(){
       </div>
     </div>`;
 
-    mainHtml += `<div class="timeline-block">${renderFullTimeline(stats, refDate, tlExt, dispMin, dispMax)}</div>`;
+    mainHtml += `<div class="timeline-block" id="timeline-block">${renderFullTimeline(stats, refDate, tlExt, dispMin, dispMax)}</div>`;
   } else {
     if(pricesStatus==='loaded'){
       let activeBuy=0, activeSell=0;
@@ -909,10 +915,15 @@ function attachRangeSliderHandlers(fullMin, fullMax){
   const fill = document.getElementById('range-fill');
   const startLabel = document.getElementById('range-start-label');
   const endLabel = document.getElementById('range-end-label');
+  const timelineBlock = document.getElementById('timeline-block');
   if(!startInput || !endInput) return;
 
   function offsetToDate(off){ return new Date(fullMin.getTime()+off*DAY); }
 
+  // Updates the fill bar, labels, and the timeline dots themselves live while
+  // dragging. Only the #timeline-block contents are replaced (not the sliders
+  // in #timeline-controls), so the <input type=range> the user is actively
+  // dragging stays in the DOM and doesn't lose pointer capture mid-drag.
   function liveUpdate(movedStart){
     let s = parseInt(startInput.value,10), e = parseInt(endInput.value,10);
     if(s>e){
@@ -921,8 +932,14 @@ function attachRangeSliderHandlers(fullMin, fullMax){
     const sPct = s/totalDays*100, ePct = e/totalDays*100;
     fill.style.left = sPct+'%';
     fill.style.width = (ePct-sPct)+'%';
-    startLabel.textContent = fmtDisplay(offsetToDate(s));
-    endLabel.textContent = fmtDisplay(offsetToDate(e));
+    const dMin = offsetToDate(s), dMax = offsetToDate(e);
+    startLabel.textContent = fmtDisplay(dMin);
+    endLabel.textContent = fmtDisplay(dMax);
+    if(timelineBlock){
+      const refDate = getRefDate();
+      const stats = computeGlobalStats();
+      timelineBlock.innerHTML = renderFullTimeline(stats, refDate, null, dMin, dMax);
+    }
   }
   function commit(){
     let s = parseInt(startInput.value,10), e = parseInt(endInput.value,10);
@@ -939,10 +956,10 @@ function attachRangeSliderHandlers(fullMin, fullMax){
 
 function resetRange(){ rangeStart=null; rangeEnd=null; render(); }
 function toggleFoldRetired(){ foldRetired=!foldRetired; render(); }
-function fitRangeToVisible(){
+function fitRangeToActive(){
   const refDate = getRefDate();
   const stats = computeGlobalStats();
-  const ext = computeVisibleExtent(stats, refDate);
+  const ext = computeActiveExtent(stats, refDate);
   rangeStart = fmtISO(ext.min);
   rangeEnd = fmtISO(ext.max);
   render();
@@ -991,8 +1008,10 @@ async function refreshData(){
   await loadSets();
   await loadSkinIds();
   render();
-  loadPrices();
-  fetchNextUpdateFromShaman(); // always try to get the live date on load
+  // Exposed on window so headless callers (generate-readme.js) can await
+  // these exact fetches instead of guessing with a fixed delay.
+  window.__pricesPromise = loadPrices();
+  window.__shamanPromise = fetchNextUpdateFromShaman(); // always try to get the live date on load
 })();
 </script>
 </body>

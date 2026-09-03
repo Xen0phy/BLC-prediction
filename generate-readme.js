@@ -2,12 +2,20 @@
 // the actual prediction + pricing logic from index.html headlessly (via jsdom),
 // so the README can never drift from what the page itself computes.
 //
+// The README is stamped with the *next reference date* (fetched live from
+// thatshaman.com, same as the page itself does) rather than the date the
+// script happened to run. That means re-running this on a day where
+// thatshaman.com's countdown hasn't changed produces byte-identical output,
+// so the "commit only if README.md changed" step in the GitHub Action is a
+// no-op — the README only actually updates once thatshaman's date moves.
+//
 // Usage:
 //   npm install jsdom          (one-time)
 //   node generate-readme.js
 //
-// Needs network access to api.guildwars2.com for live prices. Run it locally,
-// or wire it into a scheduled GitHub Action (see README.md) to keep it fresh.
+// Needs network access to api.guildwars2.com for live prices and to
+// thatshaman.com for the next reference date. Run it locally, or wire it
+// into a scheduled GitHub Action (see README.md) to keep it fresh.
 
 const { JSDOM } = require('jsdom');
 const fs = require('fs');
@@ -42,13 +50,11 @@ async function main() {
         if (url.includes('skin-ids.json')) {
           return { ok: true, json: async () => JSON.parse(fs.readFileSync(path.join(DIR, 'skin-ids.json'), 'utf8')) };
         }
-        if (url.includes('commerce/prices')) {
-          // Real network call to the live GW2 API.
+        if (url.includes('commerce/prices') || url.includes('thatshaman.com')) {
+          // Real network call: GW2 API for prices, thatshaman.com for the
+          // next reference date — the same two live sources the page uses.
           const res = await fetch(url);
           return { ok: res.ok, status: res.status, json: async () => res.json() };
-        }
-        if (url.includes('thatshaman.com')) {
-          return { ok: false, status: 404 }; // not needed for this script
         }
         return { ok: false, status: 404 };
       };
@@ -58,13 +64,32 @@ async function main() {
   let windowError = null;
   dom.window.onerror = (msg, src, line, col, err) => { windowError = err || new Error(String(msg)); };
 
-  // Let the page's own init() (loadSets -> loadSkinIds -> render -> loadPrices) run.
+  // Let the page's own init() (loadSets -> loadSkinIds -> render) run, then
+  // wait for window.__pricesPromise / window.__shamanPromise (set by init()
+  // in index.html) so we read state only once both live fetches have
+  // actually settled, instead of guessing with a fixed delay.
+  async function waitForGlobalPromise(name, maxWaitMs = 5000) {
+    const start = Date.now();
+    while (dom.window.eval(`typeof window.${name}`) === 'undefined') {
+      if (Date.now() - start > maxWaitMs) return undefined;
+      await new Promise((r) => setTimeout(r, 50));
+    }
+    return dom.window.eval(`window.${name}`);
+  }
+
   await new Promise((r) => setTimeout(r, 300));
-  await new Promise((r) => setTimeout(r, 4000)); // give the live price fetch time to finish
+  const shamanPromise = await waitForGlobalPromise('__shamanPromise');
+  const pricesPromise = await waitForGlobalPromise('__pricesPromise');
+  await Promise.race([
+    Promise.all([shamanPromise, pricesPromise]),
+    new Promise((r) => setTimeout(r, 15000)), // don't hang the workflow if a fetch stalls
+  ]);
 
   if (windowError) throw windowError;
 
   const pricesStatus = dom.window.eval('pricesStatus');
+  const shamanStatus = dom.window.eval('shamanStatus');
+  const nextUpdateDate = dom.window.eval('nextUpdateDate'); // ISO date string from thatshaman.com, or null if the fetch failed
 
   const top2 = dom.window.eval(`
     (function(){
@@ -96,9 +121,16 @@ async function main() {
   };
   const overdue = (d) => (d > 0 ? `**${d}d** overdue` : `due in **${Math.abs(d)}d**`);
 
+  // Fall back to today only if the live thatshaman.com fetch failed — same
+  // fallback the page itself uses (see getRefDate() in index.html).
+  const refDateIso = nextUpdateDate || new Date().toISOString().slice(0, 10);
+  const refDateNote = shamanStatus === 'loaded'
+    ? ''
+    : ' _(thatshaman.com unreachable — falling back to today\'s date)_';
+
   let section = `${START_MARKER}\n`;
   section += `### Most likely next two\n\n`;
-  section += `_Generated ${new Date().toISOString().slice(0, 10)}${pricesStatus === 'loaded' ? ' — prices live from the GW2 API' : ' — prices unavailable this run'}_\n\n`;
+  section += `_Reference date: ${fmtDate(refDateIso)}${refDateNote}${pricesStatus === 'loaded' ? ' · prices live from the GW2 API' : ' · prices unavailable this run'}_\n\n`;
 
   top2.forEach((x, i) => {
     const priceLine = (x.buy != null && x.sell != null)
