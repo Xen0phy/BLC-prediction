@@ -1,23 +1,19 @@
 // Wiki scraping helpers for the rotation checker.
 //
 // Three data sources on wiki.guildwars2.com:
-//   - Black_Lion_Claim_Ticket: "Items offered" lists every set still purchasable
-//     with claim tickets, newest first (1 ticket = newest, 2 = next, 3 = older
-//     still). This is where a set becomes visible FIRST, weeks before it shows
-//     up in the Black Lion Chest itself, and it gives every skin's numeric item
-//     id directly via each row's data-id attribute. This is the source for
-//     data.json's "added" date and for skin-ids.json.
-//   - Black_Lion_Chest: "Uncommon" section names this week's long-cadence set,
-//     "Rare" section names this week's short-cadence set (confirmed against
-//     index.html's typeTag(): Uncommon -> type "long", Rare -> type "short").
-//     This is where a set's *rotation* appearances (data.json's "appearances")
-//     come from, distinct from and much later than its "added" date.
-//   - Vintage_Black_Lion_Weapon_Box: flat list of every set ArenaNet has retired
-//     into the vintage pool. Used to flip data.json's "retired" flag.
+//   - Black_Lion_Claim_Ticket: "Items offered" lists purchasable sets, newest
+//     first (1/2/3 tickets = newest/next/older). First place a set becomes
+//     visible, weeks before the Chest. Gives each skin's item id via its
+//     data-id attribute. Source for data.json's "added" date and skin-ids.json.
+//   - Black_Lion_Chest: Uncommon section = this week's long-cadence set, Rare
+//     section = short-cadence (matches index.html's typeTag()). Source for
+//     data.json's "appearances", which lag "added" by weeks to months.
+//   - Vintage_Black_Lion_Weapon_Box: flat list of sets ArenaNet has retired.
+//     Flips data.json's "retired" flag.
 //
-// scrapeThemeSkinIds() (two-hop: theme page -> skin subpages -> item id) is
-// kept only as a fallback for the rare case a rotation-only theme has no
-// skin-ids.json entry and also isn't on the Claim Ticket page anymore.
+// scrapeThemeSkinIds() (theme page -> skin subpages -> item id) is a fallback
+// for a rotation-only theme missing from both skin-ids.json and the Claim
+// Ticket page.
 
 const BASE = 'https://wiki.guildwars2.com';
 const UA = 'gw2-blc-prediction-bot/1.0 (+https://github.com/; automated rotation check)';
@@ -106,19 +102,17 @@ async function scrapeThemeSkinIds(themeSlug, { concurrency = 4 } = {}) {
   return Array.from(ids).sort((a, b) => a - b);
 }
 
-// Returns the "Items offered" section of Black_Lion_Claim_Ticket as an array
-// of { name, ids: number[] }, ordered newest release first (matches the
-// site's 1-ticket / 2-ticket / 3-ticket cost ordering). Each theme's ids come
-// straight from that theme's own table rows (data-id="NNNN" on the TP price
-// spans), so no per-skin subpage fetches are needed here.
+// Returns Black_Lion_Claim_Ticket's "Items offered" section as { name, ids }[],
+// newest release first (matches the site's 1/2/3-ticket cost order). Ids come
+// from each theme's own data-id="NNNN" table rows, no per-skin fetches needed.
 async function getRecentReleases() {
   const html = await fetchHtml(`${BASE}/wiki/Black_Lion_Claim_Ticket`);
   const section = sliceBetween(html, 'id="Items_offered"', 'id="Previously_offered"') || html;
 
   // Match only real section headlines (class="mw-headline"); themes with an
   // apostrophe (Painter's, Calligrapher's) render an extra empty anchor span
-  // right before this one, so we match on the classed span specifically
-  // rather than assuming it's the first child of <h3>.
+  // right before this one, so we match on the classed span specifically.
+  // Assuming it's the first child of <h3> would grab that empty span.
   const headlineRe = /<span class="mw-headline" id="[^"]*">\s*([^<]+?)\s*<\/span>/g;
   const matches = [];
   let m;

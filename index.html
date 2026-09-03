@@ -269,10 +269,8 @@ function median(arr){
   const a=arr.slice().sort((x,y)=>x-y); const n=a.length;
   return n%2 ? a[(n-1)/2] : (a[n/2-1]+a[n/2])/2;
 }
-// Median + scaled MAD (median absolute deviation) — a robust "center and spread" pair that
-// resists single outliers, unlike mean/stdev. Used for debut-timing stats since one-off events
-// (e.g. a set unexpectedly overstaying its rotation slot and delaying whatever debuts next)
-// otherwise skew the estimate for every set that comes after.
+// Median + scaled MAD: a robust "center and spread" pair, resistant to the
+// outliers a set unexpectedly overstaying its slot creates in mean/stdev.
 function robustSpread(arr){
   const m=median(arr);
   const mad=median(arr.map(x=>Math.abs(x-m)));
@@ -404,7 +402,7 @@ function showStatus(msg, isErr){
 function computeGlobalStats(){
   const longGaps=[], shortGaps=[];
   let longCount=0, shortCount=0;
-  const debutEntries=[]; // {added, type, d} — one entry per set's first-ever BLC appearance
+  const debutEntries=[]; // {added, type, d}: one entry per set's first-ever BLC appearance
   for(const s of sets){
     const app=(s.appearances||[]).map(toUTC).sort((a,b)=>a-b);
     if(app.length && s.added){
@@ -422,13 +420,11 @@ function computeGlobalStats(){
   }
   debutEntries.sort((a,b)=>a.added-b.added);
 
-  // How long a set takes to debut in BLC after release (added -> first appearance) has
-  // tightened noticeably since the system's early days (2019-2021 debuts routinely took
-  // 600-800+ days; recent ones settle to ~150-190d for Rare, ~280-360d for Uncommon), so
-  // averaging over all history badly overstates how uncertain a fresh set's debut timing is.
-  // A trailing window of the most recent debuts, summarized with median + robust MAD instead
-  // of mean/stdev, tracks the current cadence and won't get thrown off by a single one-off
-  // delay (e.g. a set unexpectedly overstaying its slot and bumping whatever comes next).
+  // Debut delay (added -> first appearance) has tightened since 2019-2021
+  // (600-800+ days then; ~150-190d Rare / ~280-360d Uncommon now), so
+  // averaging all history overstates uncertainty. A trailing window of
+  // recent debuts, via median + robust MAD, tracks current cadence without
+  // getting skewed by one overstaying set delaying the next debut.
   const DEBUT_WINDOW = 8;
   function debutStats(filterFn){
     const vals = debutEntries.filter(filterFn).slice(-DEBUT_WINDOW).map(e=>e.d);
@@ -501,18 +497,16 @@ function buildPredictions(){
   const refDate = getRefDate();
   const active = sets.filter(s=>!s.retired);
   const scored = active.map(s=>({s, p:predictSet(s, stats, refDate)}));
-  // Only one long-type and one short-type set occupies the chest at a time (Uncommon / Rare
-  // slots respectively), so normalize each type's candidates against its own peers rather than
-  // pooling long and short together — otherwise pct doesn't reflect "chance this wins its slot".
+  // Only one long and one short set occupy the chest at a time, so normalize
+  // each type's candidates against its own peers, not pooled together.
   ['long','short'].forEach(t=>{
     const pool = scored.filter(x=>x.p.type===t);
     const totalScore = pool.reduce((a,b)=>a+b.p.score,0)||1;
     pool.forEach(x=>x.pct = x.p.score/totalScore*100);
   });
   scored.filter(x=>x.p.type!=='long' && x.p.type!=='short').forEach(x=>{ x.pct = 0; });
-  // barPct (the visual bar fill) is a separate, purely visual scale: it's relative to the single
-  // highest pct across BOTH slots combined, so bar length is comparable at a glance long vs short —
-  // e.g. if the overall highest is 40%, that bar is full and a 20% entry anywhere is half full.
+  // barPct is a purely visual scale relative to the highest pct across both
+  // slots, so bar length is comparable at a glance (40% overall max = full bar).
   const globalMaxPct = Math.max(...scored.map(x=>x.pct), 0.0001);
   scored.forEach(x=>{ x.barPct = x.pct/globalMaxPct*100; });
   return {scored, stats, refDate};
@@ -750,9 +744,8 @@ function render(){
     html += `<div class="status-msg show status-err" style="position:static;margin-bottom:20px;">Could not load data.json (${escapeHtml(dataLoadError)}). Make sure it sits next to index.html and the page is served over http/https, not opened directly as a file.</div>`;
   }
 
-  // "Next rotation — by slot" lives in the sidebar and stays visible across both tabs on
-  // desktop (enough horizontal room for a persistent column); on narrow screens it's hidden
-  // via CSS while the Timeline tab is active, matching the old single-column mobile flow.
+  // Sidebar panel stays visible across both tabs on desktop; on narrow
+  // screens CSS hides it while the Timeline tab is active (old mobile flow).
   let sidebarHtml = `<h2>Next rotation — by slot</h2>
     <div class="hint" style="margin:-6px 0 14px;">Only one Uncommon set and one Rare set occupy the chest at a time, so each slot's odds are ranked against its own slot only.</div>`;
   if(shortRanked.length===0 && longRanked.length===0){

@@ -1,22 +1,28 @@
 // Checks the live wiki for a new Black Lion Chest rotation and/or new
 // retirements into the Vintage Black Lion Weapon Box, and patches data.json /
-// skin-ids.json to match. Designed to run unattended (see the GitHub Actions
-// workflow: check-rotation.yml), scheduled Wed + Thu 00:00 UTC.
+// skin-ids.json to match. Also auto-retires a set once its appearance count
+// hits AUTO_RETIRE_AT for its slot (see there), ahead of any wiki
+// confirmation. Runs unattended via GitHub Actions (check-rotation.yml),
+// scheduled Wed + Thu 00:00 UTC.
 //
-// Because it always reconciles against the live wiki (not a "since last run"
-// diff), it's naturally idempotent: delete a set's most recent appearance
-// date and/or its skin-ids.json entry, run this again, and it comes back.
+// Reconciles against the live wiki each run with no stored diff, so it's
+// mostly idempotent: delete a skin-ids.json entry or a set's "added" date
+// and rerun to restore it. Exception: the rotation-appearance check compares
+// each slot (long/short) to the most recent set already in data.json for
+// that slot. If neither slot changed, treated as no update happened (a
+// skipped check just re-showing the same pair), no new appearance recorded.
+// If either slot changed, a real Chest update happened, and both slots get a
+// fresh appearance date, including the one whose set stayed the same, since
+// it was re-featured as part of that pair.
 //
 // Usage:
 //   node scripts/check-wiki-rotation.js
-//   FORCE_DATE=2026-08-12 node scripts/check-wiki-rotation.js   # pretend "today" is a given date
+//   FORCE_DATE=2026-08-12 node scripts/check-wiki-rotation.js   # pretend "today" is this date
 //
-// FORCE_DATE matters for testing: the anchor date is always "the most recent
-// Tuesday relative to when this script runs" (matching the real Tue-release /
-// Wed-or-Thu-check schedule). Run it un-forced on some other weekday months
-// later and it will (correctly, per that rule) date a re-added entry to
-// *this* week's Tuesday, not the original release date. Use FORCE_DATE to
-// simulate a specific Wednesday/Thursday when testing.
+// FORCE_DATE matters for testing: the anchor date is always the most recent
+// Tuesday before the run (matching the real Tue-release / Wed-Thu-check
+// schedule), so an un-forced re-add dates to *this week's* Tuesday, not the
+// original release date.
 
 const fs = require('fs');
 const path = require('path');
@@ -31,6 +37,11 @@ const DIR = path.join(__dirname, '..');
 const DATA_PATH = path.join(DIR, 'data.json');
 const SKIN_IDS_PATH = path.join(DIR, 'skin-ids.json');
 
+// Appearance count at which a set is auto-retired, per slot type. Purely a
+// judgment call, not a wiki-confirmed fact, so bump these if the real
+// cadence changes; already-retired sets are untouched either way.
+const AUTO_RETIRE_AT = { long: 4, short: 8 };
+
 function mostRecentTuesdayISO(d) {
   const day = d.getUTCDay(); // Sun=0 .. Sat=6, Tue=2
   const diff = (day - 2 + 7) % 7;
@@ -43,12 +54,10 @@ function findEntry(data, name) {
   return data.find((s) => s.name.toLowerCase() === name.toLowerCase());
 }
 
-// A set's "added" date is when it first shows up for sale on the Claim Ticket
-// page, not when it first appears in the Chest — those can be months apart.
-// `releases` is newest-first (per the site's ticket-cost ordering), so only
-// position 0 can be safely dated to *this run's* anchor Tuesday; anything
-// else missing means a release was missed on an earlier check and its real
-// date can't be recovered from this page alone.
+// "added" is the first-for-sale date on the Claim Ticket page, not the first
+// Chest appearance (can be months apart). `releases` is newest-first, so
+// only position 0 gets dated to this run's anchor Tuesday; any other new
+// entry means an earlier check was missed and its real date is unrecoverable.
 function reconcileNewReleases(data, skinIds, releases, anchorTuesday, changes) {
   releases.forEach((release, i) => {
     let entry = findEntry(data, release.name);
@@ -69,17 +78,46 @@ function reconcileNewReleases(data, skinIds, releases, anchorTuesday, changes) {
   });
 }
 
+// Finds the entry of a given slot type with the most recent known date
+// (added or latest appearance): our own record of what was last in that
+// slot, used to tell a genuine rotation change from the same set still
+// being live because a check was skipped.
+function mostRecentForSlot(data, slotType) {
+  let best = null;
+  for (const e of data) {
+    if (e.type !== slotType) continue;
+    const dates = [e.added, ...(e.appearances || [])].filter(Boolean);
+    if (!dates.length) continue;
+    const last = dates.sort().at(-1);
+    if (!best || last > best.date) best = { name: e.name, date: last };
+  }
+  return best;
+}
+
 async function reconcileCurrentRotation(data, skinIds, anchorTuesday, changes) {
   const { long, short } = await getCurrentRotation();
 
-  for (const [slotType, hit] of [['long', long], ['short', short]]) {
-    if (!hit) continue;
+  // Snapshot both slots' "last known" set before touching data, and work out
+  // per-slot whether it changed. A Chest update happens to both slots
+  // together, so if either slot changed, this is a real update and BOTH get
+  // a fresh appearance date, even the slot whose set stayed the same, since
+  // that set was re-featured as part of this pairing. Only when neither slot
+  // changed do we treat it as no update happened (a skipped check re-showing
+  // the same pair).
+  const slots = [['long', long], ['short', short]]
+    .filter(([, hit]) => hit)
+    .map(([slotType, hit]) => {
+      const lastKnown = mostRecentForSlot(data, slotType);
+      const isContinuation = lastKnown && lastKnown.name.toLowerCase() === hit.name.toLowerCase();
+      return { slotType, hit, lastKnown, isContinuation };
+    });
+  const rotationChanged = slots.some((s) => !s.isContinuation);
 
+  for (const { slotType, hit, lastKnown, isContinuation } of slots) {
     let entry = findEntry(data, hit.name);
     if (!entry) {
-      // A set appearing in the live rotation without ever having been caught
-      // on the Claim Ticket page (checker was down for a long stretch). Add
-      // a stub; its "added" date is unrecoverable from this page alone.
+      // Live in rotation but never caught on the Claim Ticket page (checker
+      // down a while). Stub it; "added" is unrecoverable here.
       entry = { name: hit.name, added: null, appearances: [], retired: false, type: slotType, vintage: null };
       data.push(entry);
       changes.push(`new set "${hit.name}" (${slotType}) found only in rotation — added date unknown, needs manual backfill`);
@@ -89,13 +127,17 @@ async function reconcileCurrentRotation(data, skinIds, anchorTuesday, changes) {
     }
 
     const alreadyRecorded = entry.added === anchorTuesday || (entry.appearances || []).includes(anchorTuesday);
-    if (!alreadyRecorded) {
+    if (!alreadyRecorded && rotationChanged) {
       entry.appearances = [...(entry.appearances || []), anchorTuesday].sort();
-      changes.push(`appearance for "${entry.name}" on ${anchorTuesday}`);
+      changes.push(
+        `appearance for "${entry.name}" on ${anchorTuesday}` +
+          (isContinuation ? ` (slot unchanged, recorded because the other slot rotated)` : '')
+      );
+    } else if (!alreadyRecorded) {
+      changes.push(`"${entry.name}" (${slotType}) still in rotation since ${lastKnown.date}, no new appearance recorded for ${anchorTuesday}`);
     }
 
-    // Should already be populated by reconcileNewReleases; this is just a
-    // safety net for a rotation theme that somehow has no ids on record.
+    // Normally set by reconcileNewReleases; fallback for a theme with no ids on record.
     if (!skinIds[entry.name] || skinIds[entry.name].length === 0) {
       try {
         const ids = await scrapeThemeSkinIds(hit.slug);
@@ -110,14 +152,28 @@ async function reconcileCurrentRotation(data, skinIds, anchorTuesday, changes) {
   }
 }
 
+// Auto-retires a set once its appearance count hits AUTO_RETIRE_AT for its
+// slot. Doesn't touch "vintage": that's set only once the wiki's vintage
+// page actually confirms it, which may lag this guess or never happen if
+// the guessed threshold is wrong for that particular set.
+function reconcileAutoRetirement(data, changes) {
+  for (const entry of data) {
+    if (entry.retired || !entry.type) continue;
+    const threshold = AUTO_RETIRE_AT[entry.type];
+    if (threshold && (entry.appearances || []).length >= threshold) {
+      entry.retired = true;
+      changes.push(`auto-retired "${entry.name}" (${entry.type}) after ${entry.appearances.length} appearances`);
+    }
+  }
+}
+
 async function reconcileRetirements(data, anchorTuesday, changes) {
   const vintageNames = await getVintageThemeNames();
   for (const name of vintageNames) {
     let entry = findEntry(data, name);
     if (!entry) {
-      // Present on the vintage page but entirely unknown to us. Add a stub;
-      // "added"/"appearances" history is unrecoverable from this page alone
-      // and needs a manual backfill from Black_Lion_Chest/historical.
+      // Unknown set found on the vintage page. Stub it; history needs
+      // manual backfill from Black_Lion_Chest/historical.
       entry = { name, added: null, appearances: [], retired: true, type: null, vintage: anchorTuesday };
       data.push(entry);
       changes.push(`new retired set "${name}" found only in vintage box (needs manual history backfill)`);
@@ -144,6 +200,7 @@ async function main() {
   reconcileNewReleases(data, skinIds, releases, anchorTuesday, changes);
 
   await reconcileCurrentRotation(data, skinIds, anchorTuesday, changes);
+  reconcileAutoRetirement(data, changes);
   await reconcileRetirements(data, anchorTuesday, changes);
 
   if (changes.length === 0) {
