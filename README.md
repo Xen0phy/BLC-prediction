@@ -9,11 +9,11 @@ _Reference date: 15 Sept 2026 · prices live from the GW2 API_
 
 **1. Paladin's Decree** — 43.4% (short)
 Last seen: 17 Mar 2026 · Estimated next: 01 Sept 2026 (**14d** overdue)
-<br>Buy total: **356g 51s 10c** &nbsp;·&nbsp; Sell total: **546g 35s 82c**
+<br>Buy total: **360g 1s 41c** &nbsp;·&nbsp; Sell total: **497g 99s 84c**
 
 **2. Dokkaebi** — 38.2% (long)
 Last seen: 19 Aug 2025 · Estimated next: 26 Jul 2026 (**50d** overdue)
-<br>Buy total: **241g 88s 52c** &nbsp;·&nbsp; Sell total: **322g 64s 36c**
+<br>Buy total: **237g 35s 35c** &nbsp;·&nbsp; Sell total: **322g 84s 52c**
 
 [Open the full tool](https://xen0phy.github.io/BLC-prediction/) for the complete roster, retired sets, and timeline.
 <!-- MOST-LIKELY:END -->
