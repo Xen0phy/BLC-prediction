@@ -68,7 +68,7 @@ function reconcileNewReleases(data, skinIds, releases, anchorTuesday, changes) {
       changes.push(
         i === 0
           ? `new release "${release.name}", added ${anchorTuesday}`
-          : `new release "${release.name}" found on claim ticket page at a non-newest position (a check was likely missed) — added date unknown, needs manual backfill`
+          : `new release "${release.name}" found on claim ticket page at a non-newest position (a check was likely missed) - added date unknown, needs manual backfill`
       );
     }
     if (release.ids.length && (!skinIds[entry.name] || skinIds[entry.name].length === 0)) {
@@ -120,7 +120,7 @@ async function reconcileCurrentRotation(data, skinIds, anchorTuesday, changes) {
       // down a while). Stub it; "added" is unrecoverable here.
       entry = { name: hit.name, added: null, appearances: [], retired: false, type: slotType, vintage: null };
       data.push(entry);
-      changes.push(`new set "${hit.name}" (${slotType}) found only in rotation — added date unknown, needs manual backfill`);
+      changes.push(`new set "${hit.name}" (${slotType}) found only in rotation - added date unknown, needs manual backfill`);
     } else if (!entry.type) {
       entry.type = slotType;
       changes.push(`set type for "${entry.name}" -> ${slotType}`);

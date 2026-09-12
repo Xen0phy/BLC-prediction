@@ -2,15 +2,15 @@ name: Check BLC rotation
 
 on:
   schedule:
-    # Wed 00:00 UTC — primary check, gives leeway past the usual Tuesday patch.
+    # Wed 00:00 UTC - primary check, gives leeway past the usual Tuesday patch.
     - cron: '0 0 * * 3'
-    # Thu 00:00 UTC — catch-up, only makes changes if Wednesday's run found nothing
+    # Thu 00:00 UTC - catch-up, only makes changes if Wednesday's run found nothing
     # (the wiki was slow to update, patch landed late, etc).
     - cron: '0 0 * * 4'
   workflow_dispatch:
     inputs:
       force_date:
-        description: 'Override "today" (YYYY-MM-DD) — for testing the Tuesday-dating logic'
+        description: 'Override "today" (YYYY-MM-DD) - for testing the Tuesday-dating logic'
         required: false
         default: ''
 
