@@ -33,6 +33,8 @@
     --fs-8: 28px;  /* hero percentage number */
   }
   *{box-sizing:border-box;}
+  /* Scroll still works, the scrollbar itself is just never drawn -- so its
+     width can't come and go and shift layout either. */
   html{scrollbar-width:none;-ms-overflow-style:none;}
   html::-webkit-scrollbar{display:none;}
   body{margin:0;background:var(--bg);color:var(--cream);font-family:var(--font-body);}
@@ -168,9 +170,9 @@
   .section-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 12px;}
   .hint{font-size:var(--fs-3);color:var(--cream-dim);}
 
-  table.roster{width:100%;border-collapse:collapse;font-size:var(--fs-4);margin-bottom:8px;}
+  table.roster{width:100%;table-layout:fixed;border-collapse:collapse;font-size:var(--fs-4);margin-bottom:8px;}
   table.roster th{text-align:left;font-size:var(--fs-2);text-transform:uppercase;letter-spacing:0.5px;color:var(--cream-dim);font-weight:400;padding:6px 10px;border-bottom:1px solid var(--line);}
-  table.roster td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:middle;}
+  table.roster td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:middle;overflow-wrap:break-word;word-break:break-word;}
   table.roster tr:hover td{background:rgba(201,151,63,0.04);}
   td.num{font-family:var(--font-num);color:var(--cream-dim);}
   td.name{color:var(--cream);font-weight:500;cursor:pointer;}
@@ -1129,7 +1131,9 @@ function render(){
     }
 
     mainHtml += `<div class="section-head"><h2>Full active roster</h2><span class="hint">oldest release date first - click a name for details</span></div>`;
-    mainHtml += `<table class="roster"><thead><tr>
+    mainHtml += `<table class="roster"><colgroup>
+      <col style="width:4%"><col style="width:22%"><col style="width:9%"><col style="width:10%"><col style="width:11%"><col style="width:11%"><col style="width:12%"><col style="width:21%">
+    </colgroup><thead><tr>
       <th class="check-col"></th><th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th class="num">Est. next</th><th>Likelihood</th><th>Price (buy / sell)</th>
     </tr></thead><tbody>`;
     chronological.forEach(x=>{
@@ -1163,7 +1167,9 @@ function render(){
         const retiredRows = sets.filter(s=>s.retired)
           .map(s=>({s, p:predictSet(s, stats, refDate)}))
           .sort((a,b)=>toUTC(b.s.added)-toUTC(a.s.added));
-        mainHtml += `<table class="roster"><thead><tr>
+        mainHtml += `<table class="roster"><colgroup>
+          <col style="width:4%"><col style="width:25%"><col style="width:10%"><col style="width:12%"><col style="width:13%"><col style="width:21%"><col style="width:15%">
+        </colgroup><thead><tr>
           <th class="check-col"></th><th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th>Price (buy / sell)</th><th>Vintage</th>
         </tr></thead><tbody>`;
         retiredRows.forEach(x=>{
