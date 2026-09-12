@@ -213,6 +213,13 @@
   .detail-panel .detail-row b{color:var(--cream);font-weight:600;}
   .chip-list{display:flex;flex-wrap:wrap;gap:6px;}
   .chip{display:inline-block;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:4px 9px;font-size:var(--fs-3);font-family:var(--font-num);color:var(--cream-dim);}
+  .skin-chip{display:inline-flex;align-items:center;gap:5px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:4px 9px;font-size:var(--fs-3);color:var(--cream-dim);}
+  .skin-chip.skin-owned{color:var(--long);border-color:var(--long);}
+  .skin-chip.skin-missing{color:var(--cream-dim);opacity:0.75;}
+  .owned-frac{font-family:var(--font-num);font-size:var(--fs-1);color:var(--cream-dim);margin-left:6px;padding:1px 5px;border:1px solid var(--line);border-radius:3px;white-space:nowrap;}
+  .owned-frac.owned-complete{color:var(--long);border-color:var(--long);}
+  .account-bar input[type=password]{background:var(--panel2);border:1px solid var(--line);color:var(--cream);border-radius:4px;padding:5px 8px;font-size:var(--fs-3);min-width:260px;}
+  .account-bar .note{max-width:640px;}
 
   button{font-family:var(--font-body);font-size:var(--fs-3);cursor:pointer;border-radius:4px;border:1px solid var(--line);background:var(--panel2);color:var(--cream-dim);padding:5px 10px;}
   button:hover{border-color:var(--gold);color:var(--cream);}
@@ -240,6 +247,8 @@
 <script>
 const REFDATE_KEY = 'blc-refdate';
 const COLLECTED_KEY = 'blc-collected';
+const APIKEY_KEY = 'blc-api-key';
+const CONFIRMED_KEY = 'blc-confirmed-complete';
 const CUTOFF = new Date('2021-11-09T00:00:00Z');
 const DAY = 86400000;
 let sets = [];
@@ -258,6 +267,17 @@ let pricesErrorMsg = null;
 let pricesUpdatedAt = null;
 let shamanStatus = 'idle'; // idle | loading | loaded | error
 let collectedSets = new Set();
+let apiKey = null;
+let accountSkinIdSet = new Set();
+let accountStatus = 'idle'; // idle | loading | loaded | error
+let accountErrorMsg = null;
+let skinDetails = {}; // skin id -> {name, icon}
+let skinDetailsStatus = 'idle'; // idle | loading | loaded | error
+// Sets the account API has ever confirmed as 100% unlocked. Skin unlocks in
+// GW2 are permanent (you can't un-unlock one), so once a set lands in here
+// it stays "done" without needing the account reachable on every later
+// visit — it's a one-way ratchet, not a live mirror of account state.
+let confirmedComplete = new Set();
 function switchTab(tab){ activeTab = tab; render(); }
 
 function toUTC(iso){ return new Date(iso + 'T00:00:00Z'); }
@@ -390,6 +410,126 @@ function toggleCollected(name, evt){
   else collectedSets.add(name);
   saveCollected();
   render();
+}
+function loadConfirmedComplete(){
+  try{
+    const raw = localStorage.getItem(CONFIRMED_KEY);
+    confirmedComplete = new Set(raw ? JSON.parse(raw) : []);
+  }catch(e){ confirmedComplete = new Set(); }
+}
+function saveConfirmedComplete(){
+  try{ localStorage.setItem(CONFIRMED_KEY, JSON.stringify(Array.from(confirmedComplete))); }
+  catch(e){ /* non-fatal: just means this ratchet won't persist across reloads */ }
+}
+function loadApiKey(){
+  try{ apiKey = localStorage.getItem(APIKEY_KEY) || null; }
+  catch(e){ apiKey = null; }
+}
+function saveApiKey(key){
+  apiKey = key || null;
+  try{
+    if(apiKey) localStorage.setItem(APIKEY_KEY, apiKey);
+    else localStorage.removeItem(APIKEY_KEY);
+  }catch(e){ showStatus('Could not save the API key locally (storage blocked).', true); }
+}
+function connectAccount(){
+  const input = document.getElementById('api-key-input');
+  const key = input ? input.value.trim() : '';
+  if(!key){ showStatus('Enter an API key first.', true); return; }
+  saveApiKey(key);
+  fetchAccountSkins();
+}
+function disconnectAccount(){
+  saveApiKey(null);
+  accountSkinIdSet = new Set();
+  accountStatus = 'idle';
+  accountErrorMsg = null;
+  showStatus('Disconnected account.', false);
+  render();
+}
+async function fetchAccountSkins(){
+  if(!apiKey) return;
+  accountStatus = 'loading';
+  accountErrorMsg = null;
+  render();
+  try{
+    const res = await fetch('https://api.guildwars2.com/v2/account/skins', {
+      headers: { 'Authorization': `Bearer ${apiKey}` }
+    });
+    if(res.status===401 || res.status===403) throw new Error('invalid key, or key is missing the "unlocks" permission');
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const ids = await res.json();
+    accountSkinIdSet = new Set(ids);
+    accountStatus = 'loaded';
+    // Ratchet: any set that's now 100% owned gets permanently remembered,
+    // so future visits don't need a live account check to know it's done.
+    let newlyConfirmed = 0;
+    Object.keys(skinIds).forEach(name=>{
+      const setIds = skinIds[name];
+      if(setIds.length && setIds.every(id=>accountSkinIdSet.has(id)) && !confirmedComplete.has(name)){
+        confirmedComplete.add(name);
+        newlyConfirmed++;
+      }
+    });
+    if(newlyConfirmed) saveConfirmedComplete();
+    showStatus(`Loaded ${accountSkinIdSet.size} unlocked skins from your account.`, false);
+    loadSkinDetails(); // fire-and-forget; fills in skin names for the detail panel
+  }catch(e){
+    accountStatus = 'error';
+    accountErrorMsg = e.message || 'fetch failed';
+  }
+  render();
+}
+async function loadSkinDetails(){
+  if(skinDetailsStatus==='loading') return;
+  skinDetailsStatus = 'loading';
+  try{
+    const allIds = Array.from(new Set(Object.values(skinIds).flat()));
+    const result = {};
+    const chunkSize = 150;
+    for(let i=0;i<allIds.length;i+=chunkSize){
+      const chunk = allIds.slice(i, i+chunkSize);
+      const res = await fetch(`https://api.guildwars2.com/v2/skins?ids=${chunk.join(',')}`);
+      if(!res.ok) continue;
+      const data = await res.json();
+      data.forEach(d=>{ result[d.id] = {name: d.name, icon: d.icon}; });
+    }
+    skinDetails = result;
+    skinDetailsStatus = 'loaded';
+  }catch(e){
+    skinDetailsStatus = 'error';
+  }
+  render();
+}
+// Returns {owned,total,complete} for a set, or null if we have no basis for
+// an answer. Prefers live account data when connected (so partial progress
+// stays accurate); otherwise falls back to the permanent confirmed-complete
+// record, which needs no live connection since it can only ever be true.
+function setOwnership(name){
+  const ids = skinIds[name] || [];
+  if(ids.length===0) return null;
+  if(accountStatus==='loaded'){
+    const owned = ids.filter(id=>accountSkinIdSet.has(id)).length;
+    return { owned, total: ids.length, complete: owned===ids.length };
+  }
+  if(confirmedComplete.has(name)) return { owned: ids.length, total: ids.length, complete: true };
+  return null;
+}
+// A set counts as collected if the user checked it manually, OR the
+// connected account has fully unlocked every skin in it.
+function isEffectivelyCollected(name){
+  if(collectedSets.has(name)) return true;
+  const own = setOwnership(name);
+  return !!(own && own.complete);
+}
+function accountNoteText(){
+  if(!apiKey) return confirmedComplete.size
+    ? `Optional — connect a GW2 API key (only needs the "unlocks" permission) to keep detecting newly-finished sets. ${confirmedComplete.size} set${confirmedComplete.size!==1?'s are':' is'} already remembered as fully unlocked from a previous check, so those stay marked even without a key connected.`
+    : 'Optional — connect a GW2 API key (only needs the "unlocks" permission) to auto-detect which sets you\'ve fully unlocked, instead of checking them off by hand. Create one at account.arena.net/applications. The key is stored only in your browser and sent only to api.guildwars2.com.';
+  if(accountStatus==='loading') return 'Fetching your unlocked skins…';
+  if(accountStatus==='error') return 'Check the key has the "unlocks" permission, then try again.';
+  if(accountStatus==='loaded') return `${accountSkinIdSet.size} unlocked skins loaded — sets fully unlocked on your account are checked off automatically below and can't be unchecked. Once a set hits 100% it's remembered permanently, so it'll stay marked even on visits without a key.`;
+  return '';
 }
 function showStatus(msg, isErr){
   const el = document.getElementById('status-msg');
@@ -711,6 +851,23 @@ function renderFullTimeline(stats, refDate, ext, dispMin, dispMax){
 function renderDetailPanel(s, p){
   const app=(s.appearances||[]).slice().sort();
   const chips = app.map(d=>`<span class="chip">${d}</span>`).join('') || '<span style="color:var(--cream-dim);">none yet</span>';
+
+  let ownershipHtml = '';
+  const ids = skinIds[s.name] || [];
+  if(accountStatus==='loaded' && ids.length){
+    const own = setOwnership(s.name);
+    const skinChips = ids.map(id=>{
+      const owned = accountSkinIdSet.has(id);
+      const detail = skinDetails[id];
+      const label = detail ? escapeHtml(detail.name) : `Skin #${id}`;
+      return `<span class="skin-chip ${owned?'skin-owned':'skin-missing'}">${owned?'✓':'—'} ${label}</span>`;
+    }).join('');
+    ownershipHtml = `<div class="detail-row" style="margin-top:2px;">
+      <span>Account skins: <b>${own.owned}/${own.total}</b>${own.complete?' — fully unlocked':''}</span>
+    </div>
+    <div class="chip-list skin-chip-list">${skinChips}</div>`;
+  }
+
   return `<div class="detail-panel">
     <div class="detail-row">
       <span>Release date: <b>${s.added?fmtDisplay(toUTC(s.added)):'—'}</b></span>
@@ -719,6 +876,7 @@ function renderDetailPanel(s, p){
       <span>Vintage: <b>${s.vintage?fmtDisplay(toUTC(s.vintage)):'Not vintage'}</b></span>
     </div>
     <div class="chip-list">${chips}</div>
+    ${ownershipHtml}
   </div>`;
 }
 
@@ -743,6 +901,18 @@ function render(){
     <button class="small" id="fetch-prices-btn" onclick="loadPrices()" ${pricesStatus==='loading'?'disabled':''}>${pricesStatus==='loading'?'Fetching prices…':(pricesStatus==='loaded'?'Refresh prices':'Load live prices')}</button>
     <span class="note">${shamanStatus==='error' ? "Could not reach thatshaman.com — falling back to today's date. Try refreshing." : (nextUpdateDate? 'Next update date, auto-fetched from thatshaman.com.' : 'Using today — thatshaman.com has no upcoming date posted yet.')}</span>
   </div>`;
+
+  html += `<div class="ref-bar account-bar">
+    <div class="field"><label>GW2 API key</label>
+      <input type="password" id="api-key-input" placeholder="Paste API key…" value="${apiKey?escapeAttr(apiKey):''}">
+    </div>
+    <button class="small" onclick="connectAccount()" ${accountStatus==='loading'?'disabled':''}>${accountStatus==='loading'?'Loading…':(accountStatus==='loaded'?'Refresh account skins':'Connect')}</button>
+    ${apiKey ? `<button class="small" onclick="disconnectAccount()">Disconnect</button>` : ''}
+    <span class="note">${accountNoteText()}</span>
+  </div>`;
+  if(accountStatus==='error'){
+    html += `<div class="status-msg show status-err" style="position:static;margin-bottom:14px;">Could not load account skins (${escapeHtml(accountErrorMsg)}).</div>`;
+  }
   if(pricesStatus==='error'){
     html += `<div class="status-msg show status-err" style="position:static;margin-bottom:14px;">Could not load prices from the GW2 API (${escapeHtml(pricesErrorMsg)}). The API is usually reachable directly from a browser — try again, or check your connection.</div>`;
   }
@@ -803,19 +973,20 @@ function render(){
     if(pricesStatus==='loaded'){
       let activeBuy=0, activeSell=0;
       chronological.forEach(x=>{
-        if(collectedSets.has(x.s.name)) return;
+        if(isEffectivelyCollected(x.s.name)) return;
         const p=prices[x.s.name]; if(p){ activeBuy+=p.buy; activeSell+=p.sell; }
       });
       let allBuy=0, allSell=0;
       let cheapestBuy=null, cheapestSell=null;
       sets.forEach(s=>{
-        if(collectedSets.has(s.name)) return;
+        if(isEffectivelyCollected(s.name)) return;
         const p=prices[s.name]; if(!p) return;
         allBuy+=p.buy; allSell+=p.sell;
         if(p.buy>0 && (!cheapestBuy || p.buy<cheapestBuy.val)) cheapestBuy={name:s.name, val:p.buy};
         if(p.sell>0 && (!cheapestSell || p.sell<cheapestSell.val)) cheapestSell={name:s.name, val:p.sell};
       });
-      const collectedNote = collectedSets.size ? ` — ${collectedSets.size} collected set${collectedSets.size!==1?'s':''} excluded` : '';
+      const effectiveCollectedCount = sets.filter(s=>isEffectivelyCollected(s.name)).length;
+      const collectedNote = effectiveCollectedCount ? ` — ${effectiveCollectedCount} collected set${effectiveCollectedCount!==1?'s':''} excluded` : '';
       mainHtml += `<div class="price-summary">
         <div class="price-summary-grid">
           <div class="ps-col">
@@ -843,10 +1014,13 @@ function render(){
     </tr></thead><tbody>`;
     chronological.forEach(x=>{
       const p=x.p, s=x.s;
-      const isCollected = collectedSets.has(s.name);
+      const own = setOwnership(s.name);
+      const autoComplete = !!(own && own.complete);
+      const isCollected = isEffectivelyCollected(s.name);
+      const checkAttrs = autoComplete ? 'disabled' : `onclick="toggleCollected('${escapeAttr(s.name)}', event)"`;
       mainHtml += `<tr class="${isCollected?'is-collected':''}">
-        <td class="check-col" onclick="toggleCollected('${escapeAttr(s.name)}', event)"><input type="checkbox" class="collected-check" ${isCollected?'checked':''} onclick="toggleCollected('${escapeAttr(s.name)}', event)" title="Mark as collected"></td>
-        <td class="name" onclick="toggleExpand('${escapeAttr(s.name)}')">${escapeHtml(s.name)}</td>
+        <td class="check-col" ${autoComplete?'':`onclick="toggleCollected('${escapeAttr(s.name)}', event)"`}><input type="checkbox" class="collected-check" ${isCollected?'checked':''} ${checkAttrs} title="${autoComplete?'Fully unlocked on your account':'Mark as collected'}"></td>
+        <td class="name" onclick="toggleExpand('${escapeAttr(s.name)}')">${escapeHtml(s.name)}${own?` <span class="owned-frac ${own.complete?'owned-complete':''}">${own.owned}/${own.total}</span>`:''}</td>
         <td>${typeTag(p.type)}</td>
         <td class="num">${p.count}</td>
         <td class="num">${p.lastDate?fmtDisplay(p.lastDate):'—'}</td>
@@ -874,10 +1048,13 @@ function render(){
         </tr></thead><tbody>`;
         retiredRows.forEach(x=>{
           const p=x.p, s=x.s;
-          const isCollected = collectedSets.has(s.name);
+          const own = setOwnership(s.name);
+          const autoComplete = !!(own && own.complete);
+          const isCollected = isEffectivelyCollected(s.name);
+          const checkAttrs = autoComplete ? 'disabled' : `onclick="toggleCollected('${escapeAttr(s.name)}', event)"`;
           mainHtml += `<tr class="${isCollected?'is-collected':''}">
-            <td class="check-col" onclick="toggleCollected('${escapeAttr(s.name)}', event)"><input type="checkbox" class="collected-check" ${isCollected?'checked':''} onclick="toggleCollected('${escapeAttr(s.name)}', event)" title="Mark as collected"></td>
-            <td class="name" onclick="toggleExpand('${escapeAttr(s.name)}')">${escapeHtml(s.name)}</td>
+            <td class="check-col" ${autoComplete?'':`onclick="toggleCollected('${escapeAttr(s.name)}', event)"`}><input type="checkbox" class="collected-check" ${isCollected?'checked':''} ${checkAttrs} title="${autoComplete?'Fully unlocked on your account':'Mark as collected'}"></td>
+            <td class="name" onclick="toggleExpand('${escapeAttr(s.name)}')">${escapeHtml(s.name)}${own?` <span class="owned-frac ${own.complete?'owned-complete':''}">${own.owned}/${own.total}</span>`:''}</td>
             <td>${typeTag(p.type)}</td>
             <td class="num">${p.count}</td>
             <td class="num">${p.lastDate?fmtDisplay(p.lastDate):'—'}</td>
@@ -1003,6 +1180,8 @@ async function refreshData(){
 (async function init(){
   loadRefDate(); // cached fallback in case the live fetch below fails
   loadCollected();
+  loadApiKey();
+  loadConfirmedComplete();
   await loadSets();
   await loadSkinIds();
   render();
@@ -1010,6 +1189,7 @@ async function refreshData(){
   // these exact fetches instead of guessing with a fixed delay.
   window.__pricesPromise = loadPrices();
   window.__shamanPromise = fetchNextUpdateFromShaman(); // always try to get the live date on load
+  window.__accountPromise = apiKey ? fetchAccountSkins() : Promise.resolve();
 })();
 </script>
 </body>
