@@ -272,6 +272,16 @@ let apiKey = null;
 let accountSkinIdSet = new Set();
 let accountStatus = 'idle'; // idle | loading | loaded | error
 let accountErrorMsg = null;
+// skin-ids.json stores ITEM ids (the Black Lion unlock scrolls), because
+// that's what /v2/commerce/prices needs for the price panel. But account
+// ownership (/v2/account/skins) is keyed by a completely different SKIN id
+// space, so item ids never match it directly. ownershipSkinIds mirrors
+// skinIds' shape (name -> id[]) but with each item id resolved to the
+// skin id(s) it unlocks, via /v2/items' details.skins. This is built once,
+// lazily, and used ONLY for the owned/total comparison — skinIds itself is
+// never rewritten, so pricing keeps working off the original item ids.
+let ownershipSkinIds = {};
+let ownershipSkinIdsStatus = 'idle'; // idle | loading | loaded | error
 let skinDetails = {}; // skin id -> {name, icon}
 let skinDetailsStatus = 'idle'; // idle | loading | loaded | error
 // Sets the account API has ever confirmed as 100% unlocked. Skin unlocks in
@@ -448,6 +458,48 @@ function disconnectAccount(){
   showStatus('Disconnected account.', false);
   render();
 }
+// Resolves every item id in skinIds to the skin id(s) it unlocks, so the
+// account-ownership check compares skin ids against skin ids instead of
+// item ids against skin ids. Cached in ownershipSkinIds after the first
+// successful run for the current skinIds; call again if skinIds changes.
+async function loadOwnershipSkinIds(){
+  if(ownershipSkinIdsStatus==='loading') return;
+  ownershipSkinIdsStatus = 'loading';
+  try{
+    const allItemIds = Array.from(new Set(Object.values(skinIds).flat()));
+    const resolved = new Map(); // item id -> skin id[]
+    const chunkSize = 200; // /v2/items max ids per request
+    for(let i=0;i<allItemIds.length;i+=chunkSize){
+      const chunk = allItemIds.slice(i, i+chunkSize);
+      const res = await fetch(`https://api.guildwars2.com/v2/items?ids=${chunk.join(',')}`);
+      if(res.ok){
+        const items = await res.json();
+        items.forEach(it=>resolved.set(it.id, it.details?.skins || []));
+        continue;
+      }
+      // A single bad/retired id 404s the whole chunk on this endpoint;
+      // fall back to one-by-one so it doesn't blank out the rest.
+      for(const id of chunk){
+        try{
+          const r = await fetch(`https://api.guildwars2.com/v2/items/${id}`);
+          if(!r.ok) continue;
+          const it = await r.json();
+          resolved.set(it.id, it.details?.skins || []);
+        }catch(e){ /* leave unresolved; that set just won't get this id counted */ }
+      }
+    }
+    const out = {};
+    Object.entries(skinIds).forEach(([name, itemIds])=>{
+      const skinIdList = new Set();
+      itemIds.forEach(itemId=>(resolved.get(itemId)||[]).forEach(sid=>skinIdList.add(sid)));
+      out[name] = Array.from(skinIdList);
+    });
+    ownershipSkinIds = out;
+    ownershipSkinIdsStatus = 'loaded';
+  }catch(e){
+    ownershipSkinIdsStatus = 'error';
+  }
+}
 async function fetchAccountSkins(){
   if(!apiKey) return;
   accountStatus = 'loading';
@@ -462,12 +514,16 @@ async function fetchAccountSkins(){
     if(!res.ok) throw new Error('HTTP '+res.status);
     const ids = await res.json();
     accountSkinIdSet = new Set(ids);
+    // skinIds is item ids (needed for prices); the account only ever
+    // returns skin ids, so resolve item->skin once before comparing.
+    if(ownershipSkinIdsStatus!=='loaded') await loadOwnershipSkinIds();
+    if(ownershipSkinIdsStatus==='error') throw new Error('could not resolve set skin ids from the GW2 API');
     accountStatus = 'loaded';
     // Ratchet: any set that's now 100% owned gets permanently remembered,
     // so future visits don't need a live account check to know it's done.
     let newlyConfirmed = 0;
     Object.keys(skinIds).forEach(name=>{
-      const setIds = skinIds[name];
+      const setIds = ownershipSkinIds[name] || [];
       if(setIds.length && setIds.every(id=>accountSkinIdSet.has(id)) && !confirmedComplete.has(name)){
         confirmedComplete.add(name);
         newlyConfirmed++;
@@ -486,7 +542,10 @@ async function loadSkinDetails(){
   if(skinDetailsStatus==='loading') return;
   skinDetailsStatus = 'loading';
   try{
-    const allIds = Array.from(new Set(Object.values(skinIds).flat()));
+    // ownershipSkinIds (skin ids), NOT skinIds (item ids) -- /v2/skins is
+    // keyed by skin id, and an item id landing in that space by coincidence
+    // would silently return the wrong skin's name/icon rather than erroring.
+    const allIds = Array.from(new Set(Object.values(ownershipSkinIds).flat()));
     const result = {};
     const chunkSize = 150;
     for(let i=0;i<allIds.length;i+=chunkSize){
@@ -511,8 +570,10 @@ function setOwnership(name){
   const ids = skinIds[name] || [];
   if(ids.length===0) return null;
   if(accountStatus==='loaded'){
-    const owned = ids.filter(id=>accountSkinIdSet.has(id)).length;
-    return { owned, total: ids.length, complete: owned===ids.length };
+    const ownIds = ownershipSkinIds[name] || [];
+    if(ownIds.length===0) return null; // still resolving, or nothing resolved for this set
+    const owned = ownIds.filter(id=>accountSkinIdSet.has(id)).length;
+    return { owned, total: ownIds.length, complete: owned===ownIds.length };
   }
   if(confirmedComplete.has(name)) return { owned: ids.length, total: ids.length, complete: true };
   return null;
