@@ -453,9 +453,10 @@ async function fetchAccountSkins(){
   accountErrorMsg = null;
   render();
   try{
-    const res = await fetch('https://api.guildwars2.com/v2/account/skins', {
-      headers: { 'Authorization': `Bearer ${apiKey}` }
-    });
+    // The GW2 API doesn't support CORS preflight, so an Authorization header
+    // (which triggers one) fails from a browser with a generic "Failed to
+    // fetch" — the key has to go in the query string instead.
+    const res = await fetch(`https://api.guildwars2.com/v2/account/skins?access_token=${encodeURIComponent(apiKey)}`);
     if(res.status===401 || res.status===403) throw new Error('invalid key, or key is missing the "unlocks" permission');
     if(!res.ok) throw new Error('HTTP '+res.status);
     const ids = await res.json();
