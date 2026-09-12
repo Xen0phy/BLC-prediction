@@ -216,8 +216,9 @@
   .skin-chip{display:inline-flex;align-items:center;gap:5px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:4px 9px;font-size:var(--fs-3);color:var(--cream-dim);}
   .skin-chip.skin-owned{color:var(--long);border-color:var(--long);}
   .skin-chip.skin-missing{color:var(--cream-dim);opacity:0.75;}
-  .owned-frac{font-family:var(--font-num);font-size:var(--fs-1);color:var(--cream-dim);margin-left:6px;padding:1px 5px;border:1px solid var(--line);border-radius:3px;white-space:nowrap;}
-  .owned-frac.owned-complete{color:var(--long);border-color:var(--long);}
+  .owned-frac{font-family:var(--font-num);font-size:var(--fs-2);color:var(--cream-dim);margin-left:6px;padding:2px 6px;border:1px solid var(--line);border-radius:3px;white-space:nowrap;background:var(--panel2);}
+  .owned-frac.owned-complete{color:var(--long);border-color:var(--long);background:var(--status-ok-bg);}
+  .owned-frac.owned-partial{color:var(--gold);border-color:var(--gold);}
   .account-bar input[type=password]{background:var(--panel2);border:1px solid var(--line);color:var(--cream);border-radius:4px;padding:5px 8px;font-size:var(--fs-3);min-width:260px;}
   .account-bar .note{max-width:640px;}
 
@@ -529,7 +530,15 @@ function accountNoteText(){
     : 'Optional — connect a GW2 API key (only needs the "unlocks" permission) to auto-detect which sets you\'ve fully unlocked, instead of checking them off by hand. Create one at account.arena.net/applications. The key is stored only in your browser and sent only to api.guildwars2.com.';
   if(accountStatus==='loading') return 'Fetching your unlocked skins…';
   if(accountStatus==='error') return 'Check the key has the "unlocks" permission, then try again.';
-  if(accountStatus==='loaded') return `${accountSkinIdSet.size} unlocked skins loaded — sets fully unlocked on your account are checked off automatically below and can't be unchecked. Once a set hits 100% it's remembered permanently, so it'll stay marked even on visits without a key.`;
+  if(accountStatus==='loaded'){
+    const names = Object.keys(skinIds);
+    let fullyOwned=0, partial=0;
+    names.forEach(name=>{
+      const own = setOwnership(name);
+      if(own){ if(own.complete) fullyOwned++; else if(own.owned>0) partial++; }
+    });
+    return `${accountSkinIdSet.size} unlocked skins loaded — <b>${fullyOwned} of ${names.length} sets fully unlocked</b>, ${partial} more partially owned (look for the small fraction badge next to each set's name below). Fully-unlocked sets are checked off automatically and can't be unchecked; once a set hits 100% it's remembered permanently, so it stays marked even on visits without a key.`;
+  }
   return '';
 }
 function showStatus(msg, isErr){
@@ -1021,7 +1030,7 @@ function render(){
       const checkAttrs = autoComplete ? 'disabled' : `onclick="toggleCollected('${escapeAttr(s.name)}', event)"`;
       mainHtml += `<tr class="${isCollected?'is-collected':''}">
         <td class="check-col" ${autoComplete?'':`onclick="toggleCollected('${escapeAttr(s.name)}', event)"`}><input type="checkbox" class="collected-check" ${isCollected?'checked':''} ${checkAttrs} title="${autoComplete?'Fully unlocked on your account':'Mark as collected'}"></td>
-        <td class="name" onclick="toggleExpand('${escapeAttr(s.name)}')">${escapeHtml(s.name)}${own?` <span class="owned-frac ${own.complete?'owned-complete':''}">${own.owned}/${own.total}</span>`:''}</td>
+        <td class="name" onclick="toggleExpand('${escapeAttr(s.name)}')">${escapeHtml(s.name)}${own?` <span class="owned-frac ${ownedFracClass(own)}">${own.owned}/${own.total}</span>`:''}</td>
         <td>${typeTag(p.type)}</td>
         <td class="num">${p.count}</td>
         <td class="num">${p.lastDate?fmtDisplay(p.lastDate):'—'}</td>
@@ -1055,7 +1064,7 @@ function render(){
           const checkAttrs = autoComplete ? 'disabled' : `onclick="toggleCollected('${escapeAttr(s.name)}', event)"`;
           mainHtml += `<tr class="${isCollected?'is-collected':''}">
             <td class="check-col" ${autoComplete?'':`onclick="toggleCollected('${escapeAttr(s.name)}', event)"`}><input type="checkbox" class="collected-check" ${isCollected?'checked':''} ${checkAttrs} title="${autoComplete?'Fully unlocked on your account':'Mark as collected'}"></td>
-            <td class="name" onclick="toggleExpand('${escapeAttr(s.name)}')">${escapeHtml(s.name)}${own?` <span class="owned-frac ${own.complete?'owned-complete':''}">${own.owned}/${own.total}</span>`:''}</td>
+            <td class="name" onclick="toggleExpand('${escapeAttr(s.name)}')">${escapeHtml(s.name)}${own?` <span class="owned-frac ${ownedFracClass(own)}">${own.owned}/${own.total}</span>`:''}</td>
             <td>${typeTag(p.type)}</td>
             <td class="num">${p.count}</td>
             <td class="num">${p.lastDate?fmtDisplay(p.lastDate):'—'}</td>
@@ -1141,6 +1150,12 @@ function fitRangeToActive(){
   render();
 }
 
+function ownedFracClass(own){
+  if(!own) return '';
+  if(own.complete) return 'owned-complete';
+  if(own.owned>0) return 'owned-partial';
+  return '';
+}
 function priceCellHtml(name){
   if(pricesStatus==='loading') return `<span class="coin dim">loading…</span>`;
   const p = prices[name];
