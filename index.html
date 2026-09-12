@@ -282,6 +282,8 @@ let accountErrorMsg = null;
 // never rewritten, so pricing keeps working off the original item ids.
 let ownershipSkinIds = {};
 let ownershipSkinIdsStatus = 'idle'; // idle | loading | loaded | error
+let itemSkinMap = new Map(); // item id -> skin id[] (per-item, for remaining-price calc)
+let itemPriceMap = {}; // item id -> {buys, sells} (raw, for remaining-price calc)
 let skinDetails = {}; // skin id -> {name, icon}
 let skinDetailsStatus = 'idle'; // idle | loading | loaded | error
 // Sets the account API has ever confirmed as 100% unlocked. Skin unlocks in
@@ -386,6 +388,7 @@ async function loadPrices(){
       result[name] = {buy, sell, missing, count: ids.length};
     });
     prices = result;
+    itemPriceMap = priceMap;
     pricesStatus = 'loaded';
     pricesUpdatedAt = new Date();
   }catch(e){
@@ -495,6 +498,7 @@ async function loadOwnershipSkinIds(){
       out[name] = Array.from(skinIdList);
     });
     ownershipSkinIds = out;
+    itemSkinMap = resolved;
     ownershipSkinIdsStatus = 'loaded';
   }catch(e){
     ownershipSkinIdsStatus = 'error';
@@ -584,6 +588,35 @@ function isEffectivelyCollected(name){
   if(collectedSets.has(name)) return true;
   const own = setOwnership(name);
   return !!(own && own.complete);
+}
+// Whether a single BLC item's skin is already unlocked account-wide, i.e.
+// buying it again would be pointless. Only meaningful with a live account
+// connection and a resolved item->skin mapping; otherwise assume not owned.
+function isItemOwned(itemId){
+  if(accountStatus!=='loaded') return false;
+  const skins = itemSkinMap.get(itemId);
+  if(!skins || skins.length===0) return false;
+  return skins.every(id=>accountSkinIdSet.has(id));
+}
+// Same shape as an entry in `prices`, but only totals the items in the set
+// you don't already own -- the actual cost left to finish it, rather than
+// the cost of buying the whole set from scratch.
+function remainingSetPrice(name){
+  const ids = skinIds[name] || [];
+  let buy=0, sell=0, missing=0, count=0;
+  ids.forEach(id=>{
+    if(isItemOwned(id)) return;
+    count++;
+    const d = itemPriceMap[id];
+    if(d && d.buys){ buy += d.buys.unit_price; } else { missing++; }
+    if(d && d.sells){ sell += d.sells.unit_price; } else { missing++; }
+  });
+  return {buy, sell, missing, count};
+}
+// Picks remaining-cost-to-complete when an account is connected (so partial
+// ownership is reflected), or the full-set price otherwise.
+function effectivePrice(name){
+  return accountStatus==='loaded' ? remainingSetPrice(name) : prices[name];
 }
 function accountNoteText(){
   if(!apiKey) return confirmedComplete.size
@@ -924,19 +957,21 @@ function renderDetailPanel(s, p){
   const chips = app.map(d=>`<span class="chip">${d}</span>`).join('') || '<span style="color:var(--cream-dim);">none yet</span>';
 
   let ownershipHtml = '';
-  const ids = skinIds[s.name] || [];
-  if(accountStatus==='loaded' && ids.length){
+  const ownIds = ownershipSkinIds[s.name] || [];
+  if(accountStatus==='loaded' && ownIds.length){
     const own = setOwnership(s.name);
-    const skinChips = ids.map(id=>{
-      const owned = accountSkinIdSet.has(id);
+    // Only list what's still missing -- once a set is fully unlocked the
+    // summary line above already says so, and re-listing every skin as
+    // "owned" is just noise.
+    const missingChips = ownIds.filter(id=>!accountSkinIdSet.has(id)).map(id=>{
       const detail = skinDetails[id];
       const label = detail ? escapeHtml(detail.name) : `Skin #${id}`;
-      return `<span class="skin-chip ${owned?'skin-owned':'skin-missing'}">${owned?'✓':'—'} ${label}</span>`;
+      return `<span class="skin-chip skin-missing">— ${label}</span>`;
     }).join('');
     ownershipHtml = `<div class="detail-row" style="margin-top:2px;">
       <span>Account skins: <b>${own.owned}/${own.total}</b>${own.complete?' — fully unlocked':''}</span>
     </div>
-    <div class="chip-list skin-chip-list">${skinChips}</div>`;
+    ${own.complete ? '' : `<div class="chip-list skin-chip-list">${missingChips}</div>`}`;
   }
 
   return `<div class="detail-panel">
@@ -1045,19 +1080,20 @@ function render(){
       let activeBuy=0, activeSell=0;
       chronological.forEach(x=>{
         if(isEffectivelyCollected(x.s.name)) return;
-        const p=prices[x.s.name]; if(p){ activeBuy+=p.buy; activeSell+=p.sell; }
+        const p=effectivePrice(x.s.name); if(p){ activeBuy+=p.buy; activeSell+=p.sell; }
       });
       let allBuy=0, allSell=0;
       let cheapestBuy=null, cheapestSell=null;
       sets.forEach(s=>{
         if(isEffectivelyCollected(s.name)) return;
-        const p=prices[s.name]; if(!p) return;
+        const p=effectivePrice(s.name); if(!p) return;
         allBuy+=p.buy; allSell+=p.sell;
         if(p.buy>0 && (!cheapestBuy || p.buy<cheapestBuy.val)) cheapestBuy={name:s.name, val:p.buy};
         if(p.sell>0 && (!cheapestSell || p.sell<cheapestSell.val)) cheapestSell={name:s.name, val:p.sell};
       });
       const effectiveCollectedCount = sets.filter(s=>isEffectivelyCollected(s.name)).length;
       const collectedNote = effectiveCollectedCount ? ` — ${effectiveCollectedCount} collected set${effectiveCollectedCount!==1?'s':''} excluded` : '';
+      const remainingNote = accountStatus==='loaded' ? ', and only the skins you don\'t already own within each partially-completed set' : '';
       mainHtml += `<div class="price-summary">
         <div class="price-summary-grid">
           <div class="ps-col">
@@ -1075,7 +1111,7 @@ function render(){
             <div class="ps-line"><span class="ps-lbl">Cheapest sell</span>${cheapestSell?`<b>${escapeHtml(cheapestSell.name)}</b> ${coinHtml(cheapestSell.val)}`:'—'}</div>
           </div>
         </div>
-        <span class="note">live from the GW2 API${pricesUpdatedAt?', updated '+pricesUpdatedAt.toLocaleTimeString():''} — sums are buy-order and sell-listing totals across all skins in each set${collectedNote}; cheapest buy/sell are the single lowest-priced uncollected sets. Check off sets below as you collect them to update these.</span>
+        <span class="note">live from the GW2 API${pricesUpdatedAt?', updated '+pricesUpdatedAt.toLocaleTimeString():''} — sums are buy-order and sell-listing totals across all skins in each set${collectedNote}${remainingNote}; cheapest buy/sell are the single lowest-priced uncollected sets. Check off sets below as you collect them to update these.</span>
       </div>`;
     }
 
@@ -1219,7 +1255,8 @@ function ownedFracClass(own){
 }
 function priceCellHtml(name){
   if(pricesStatus==='loading') return `<span class="coin dim">loading…</span>`;
-  const p = prices[name];
+  if(isEffectivelyCollected(name)) return `<span class="coin dim">owned</span>`;
+  const p = effectivePrice(name);
   if(!p) return `<span class="coin dim">—</span>`;
   const warn = p.missing ? `<span class="price-incomplete" title="${p.missing} of ${p.count*2} listings missing for this set">partial</span>` : '';
   return `<span class="lbl">Buy</span>${coinHtml(p.buy)}${warn}<br><span class="lbl">Sell</span>${coinHtml(p.sell)}`;
