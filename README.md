@@ -7,11 +7,11 @@ Predicts the next Black Lion Chest weapon skin rotation and shows live Trading P
 
 _Reference date: 29 Sept 2026_
 
-**1. Paladin's Decree** - 40.5% (short)
-Last seen: 17 Mar 2026 · Estimated next: 01 Sept 2026 (**28d** overdue)
+**1. Snow Garden** - 46.2% (short)
+Last seen: 14 Apr 2026 · Estimated next: 04 Oct 2026 (due in **6d**)
 
-**2. Dokkaebi** - 34.6% (long)
-Last seen: 19 Aug 2025 · Estimated next: 26 Jul 2026 (**64d** overdue)
+**2. Shade-Touched** - 44.6% (long)
+Last seen: - · Estimated next: 14 Aug 2026 (**46d** overdue)
 
 [Open the full tool](https://xen0phy.github.io/BLC-prediction/) for the complete roster, retired sets, live prices, and timeline.
 <!-- MOST-LIKELY:END -->
