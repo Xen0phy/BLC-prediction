@@ -134,7 +134,8 @@
   .range-slider-wrap input[type=range]:active::-webkit-slider-thumb{background:var(--gold);cursor:grabbing;}
   .range-slider-wrap input[type=range]:active::-moz-range-thumb{background:var(--gold);cursor:grabbing;}
   .range-slider-labels{display:flex;justify-content:space-between;font-size:var(--fs-2);color:var(--cream-dim);font-family:var(--font-num);}
-  .timeline-block{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px 18px 20px;margin-bottom:32px;overflow-x:auto;}
+  .timeline-block{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px 18px 20px;margin-bottom:32px;overflow-x:auto;position:relative;}
+  .timeline-sameday-line{position:absolute;top:0;bottom:0;width:1px;background:var(--cream-dim);opacity:0.3;z-index:-1;pointer-events:none;}
   .timeline-row{display:grid;grid-template-columns:150px 1fr;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--line-soft);cursor:pointer;}
   .timeline-row:last-child{border-bottom:none;}
   .timeline-row:hover .timeline-label{color:var(--gold);}
@@ -985,11 +986,28 @@ function renderFullTimeline(stats, refDate, ext, dispMin, dispMax){
   if(manualRange && visibleActive.length===0 && (foldRetired || scored.filter(x=>x.retired).filter(rowVisible).length===0)){
     html += `<div style="color:var(--cream-dim);font-size:var(--fs-4);padding:10px 0;">No sets fall in this date range.</div>`;
   }
-  return html;
+  const rowsForLines = scored.filter(x=>!(x.retired && foldRetired)).filter(rowVisible);
+  const dayCounts = new Map();
+  const bump = (dateStr)=>{ if(!dateStr) return; dayCounts.set(dateStr, (dayCounts.get(dateStr)||0)+1); };
+  rowsForLines.forEach(x=>{
+    const s=x.s;
+    (s.appearances||[]).forEach(bump);
+    if(showReleases && s.added) bump(s.added);
+    if(s.vintage) bump(s.vintage);
+  });
+  let sameDayHtml = '';
+  dayCounts.forEach((count, dateStr)=>{
+    if(count<2) return;
+    const d = toUTC(dateStr);
+    const p = pct(d);
+    if(p<0 || p>100) return;
+    sameDayHtml += `<div class="timeline-sameday-line" style="left:${p}%" title="${count} sets on ${fmtDisplay(d)}"></div>`;
+  });
+
+  return sameDayHtml + html;
 }
 
 function renderDetailPanel(s, p){
-  const app=(s.appearances||[]).slice().sort();
   const chips = app.map(d=>`<span class="chip">${d}</span>`).join('') || '<span style="color:var(--cream-dim);">none yet</span>';
 
   let ownershipHtml = '';
