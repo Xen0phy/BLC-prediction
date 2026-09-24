@@ -117,6 +117,9 @@
   .vintage-tag::before{content:"◆";font-size:8px;color:var(--vintage);position:relative;top:-1px;}
   .vintage-dash{color:var(--cream-dim);font-family:var(--font-num);}
   .timeline-dot.vintage{background:var(--vintage);border-radius:2px;transform:translate(-50%,-50%) rotate(45deg);width:8px;height:8px;}
+  .timeline-dot.release{background:none;border:none;width:9px;height:9px;}
+  .timeline-dot.release::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--cream);transform:translateX(-50%);}
+  .timeline-dot.release::after{content:'';position:absolute;top:50%;left:0;right:0;height:2px;background:var(--cream);transform:translateY(-50%);}
 
   .timeline-controls{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 18px;margin-bottom:14px;}
   .control-row{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
@@ -267,6 +270,7 @@ let rangeStart = null;
 let rangeEnd = null;
 let foldRetired = true;
 let listShowRetired = false;
+let showReleases = false;
 let skinIds = {};
 let prices = {};
 let pricesStatus = 'idle'; // idle | loading | loaded | error
@@ -893,6 +897,7 @@ function renderFullTimeline(stats, refDate, ext, dispMin, dispMax){
       <span class="legend-item"><span class="legend-dot" style="background:var(--unknown)"></span>unknown</span>
       <span class="legend-item"><span style="width:8px;height:8px;border-radius:50%;border:1.5px dashed var(--gold);display:inline-block;"></span>predicted next</span>
       <span class="legend-item"><span style="width:8px;height:8px;background:var(--vintage);display:inline-block;transform:rotate(45deg);"></span>went vintage</span>
+      ${showReleases ? `<span class="legend-item"><span style="color:var(--cream);font-weight:700;">+</span>released</span>` : ''}
       <span class="legend-item"><span style="width:14px;height:2px;background:var(--long);display:inline-block;"></span>history</span>
       <span class="legend-item"><span style="width:14px;height:0;border-top:2px dashed var(--long);display:inline-block;"></span>to predicted</span>
       <span class="legend-item"><span style="width:1px;height:10px;background:var(--gold);display:inline-block;"></span>reference date</span>
@@ -932,6 +937,13 @@ function renderFullTimeline(stats, refDate, ext, dispMin, dispMax){
       const vp = pct(toUTC(s.vintage));
       if(vp>=0 && vp<=100){
         dots += `<div class="timeline-dot vintage" style="left:${vp}%" title="went vintage: ${fmtDisplay(toUTC(s.vintage))}"></div>`;
+      }
+    }
+    if(showReleases && s.added){
+      const rd = toUTC(s.added);
+      const rp = pct(rd);
+      if(rp>=0 && rp<=100){
+        dots += `<div class="timeline-dot release" style="left:${rp}%" title="released: ${fmtDisplay(rd)}"></div>`;
       }
     }
     return `<div class="timeline-row ${x.retired?'is-retired':''}" onclick="toggleExpand('${escapeAttr(s.name)}')">
@@ -1075,6 +1087,7 @@ function render(){
     mainHtml += `<div class="timeline-controls">
       <div class="control-row">
         <button class="small" onclick="fitRangeToActive()">Fit range to active sets</button>
+        <button class="small" onclick="toggleShowReleases()">${showReleases ? 'Hide release dates' : 'Show release dates'}</button>
         <span class="hint">Drag the handles below to zoom the timeline to a date range.</span>
       </div>
       <div class="range-slider-wrap">
@@ -1257,6 +1270,7 @@ function attachRangeSliderHandlers(fullMin, fullMax){
 }
 
 function toggleFoldRetired(){ foldRetired=!foldRetired; render(); }
+function toggleShowReleases(){ showReleases=!showReleases; render(); }
 function fitRangeToActive(){
   const refDate = getRefDate();
   const stats = computeGlobalStats();
