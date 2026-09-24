@@ -117,9 +117,8 @@
   .vintage-tag::before{content:"◆";font-size:8px;color:var(--vintage);position:relative;top:-1px;}
   .vintage-dash{color:var(--cream-dim);font-family:var(--font-num);}
   .timeline-dot.vintage{background:var(--vintage);border-radius:2px;transform:translate(-50%,-50%) rotate(45deg);width:8px;height:8px;}
-  .timeline-dot.release{background:none;border:none;width:9px;height:9px;}
-  .timeline-dot.release::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--cream);transform:translateX(-50%);}
-  .timeline-dot.release::after{content:'';position:absolute;top:50%;left:0;right:0;height:2px;background:var(--cream);transform:translateY(-50%);}
+  .timeline-dot.release{background:none;border:none;width:9px;height:9px;display:flex;align-items:center;justify-content:center;}
+  .timeline-dot.release::before{content:'+';color:var(--cream);font-size:12px;line-height:1;font-weight:700;}
 
   .timeline-controls{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 18px;margin-bottom:14px;}
   .control-row{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
@@ -834,6 +833,11 @@ function computeFullExtent(stats, refDate){
       if(vd<minD) minD=vd;
       if(vd>maxD) maxD=vd;
     }
+    if(showReleases && s.added){
+      const rd = toUTC(s.added);
+      if(rd<minD) minD=rd;
+      if(rd>maxD) maxD=rd;
+    }
   });
   minD = new Date(minD.getTime()-20*DAY);
   maxD = new Date(maxD.getTime()+20*DAY);
@@ -851,6 +855,11 @@ function computeActiveExtent(stats, refDate){
       const p = predictSet(s, stats, refDate);
       if(p.predicted<minD) minD=p.predicted;
       if(p.predicted>maxD) maxD=p.predicted;
+    }
+    if(showReleases && s.added){
+      const rd = toUTC(s.added);
+      if(rd<minD) minD=rd;
+      if(rd>maxD) maxD=rd;
     }
   });
   minD = new Date(minD.getTime()-20*DAY);
@@ -875,6 +884,7 @@ function renderFullTimeline(stats, refDate, ext, dispMin, dispMax){
     if(app.some(d=>d>=dispMin && d<=dispMax)) return true;
     if(!x.retired && x.p.predicted>=dispMin && x.p.predicted<=dispMax) return true;
     if(x.s.vintage){ const vd=toUTC(x.s.vintage); if(vd>=dispMin && vd<=dispMax) return true; }
+    if(showReleases && x.s.added){ const rd=toUTC(x.s.added); if(rd>=dispMin && rd<=dispMax) return true; }
     return false;
   }
 
