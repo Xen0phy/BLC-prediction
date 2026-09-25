@@ -135,7 +135,7 @@
   .range-slider-wrap input[type=range]:active::-moz-range-thumb{background:var(--gold);cursor:grabbing;}
   .range-slider-labels{display:flex;justify-content:space-between;font-size:var(--fs-2);color:var(--cream-dim);font-family:var(--font-num);}
   .timeline-block{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px 18px 20px;margin-bottom:32px;overflow-x:auto;position:relative;}
-  .timeline-sameday-line{position:absolute;top:0;width:1px;background:var(--gold);opacity:0.55;pointer-events:none;display:none;}
+  .timeline-sameday-line{position:fixed;width:1px;background:var(--gold);opacity:0.55;pointer-events:none;display:none;z-index:50;}
   .timeline-dot[data-day]{cursor:pointer;}
   .timeline-dot.sameday-highlight{box-shadow:0 0 0 3px var(--gold);}
   .timeline-row{display:grid;grid-template-columns:150px 1fr;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--line-soft);cursor:pointer;}
@@ -1379,6 +1379,7 @@ async function refreshData(){
   const appEl = document.getElementById('app');
   if(!appEl) return;
   let line = null;
+  let shownDay = null;
   function getLine(){
     if(!line){
       line = document.createElement('div');
@@ -1387,34 +1388,42 @@ async function refreshData(){
     }
     return line;
   }
+  function hide(){
+    if(line) line.style.display = 'none';
+    shownDay = null;
+    document.querySelectorAll('.sameday-highlight').forEach(m=>m.classList.remove('sameday-highlight'));
+  }
   function onOver(e){
     const el = e.target.closest('[data-day]');
     if(!el) return;
-    const track = el.closest('.timeline-track');
-    const block = el.closest('.timeline-block');
-    if(!track || !block) return;
     const day = el.getAttribute('data-day');
+    if(day===shownDay) return; // already showing this day's line; avoid redundant work while the mouse lingers or the page scrolls under it
+    shownDay = day;
+    const matches = [...document.querySelectorAll(`[data-day="${day}"]`)];
+    if(matches.length<2) return;
+    const rects = matches.map(m=>m.getBoundingClientRect());
+    const elRect = el.getBoundingClientRect();
+    const top = Math.min(...rects.map(r=>r.top+r.height/2));
+    const bottom = Math.max(...rects.map(r=>r.top+r.height/2));
     const l = getLine();
-    // Reuse the dot's own left:% - it's already positioned within this exact
-    // track box, so copying it guarantees pixel-perfect horizontal alignment
-    // (no separate pixel math to get subtly wrong).
-    track.appendChild(l);
-    l.style.left = el.style.left;
-    const trackRect = track.getBoundingClientRect();
-    const blockRect = block.getBoundingClientRect();
-    l.style.top = (blockRect.top - trackRect.top) + 'px';
-    l.style.height = blockRect.height + 'px';
+    l.style.left = (elRect.left + elRect.width/2) + 'px';
+    l.style.top = top + 'px';
+    l.style.height = (bottom-top) + 'px';
     l.style.display = 'block';
-    block.querySelectorAll(`[data-day="${day}"]`).forEach(m=>m.classList.add('sameday-highlight'));
+    matches.forEach(m=>m.classList.add('sameday-highlight'));
   }
   function onOut(e){
     const el = e.target.closest('[data-day]');
     if(!el) return;
-    if(line) line.style.display = 'none';
-    document.querySelectorAll('.sameday-highlight').forEach(m=>m.classList.remove('sameday-highlight'));
+    // only hide if the mouse actually left the element (not just moved to a child of it)
+    if(el.contains(e.relatedTarget)) return;
+    hide();
   }
   appEl.addEventListener('mouseover', onOver);
   appEl.addEventListener('mouseout', onOut);
+  // A hover-anchored line goes stale the instant the page scrolls under it;
+  // just drop it rather than trying to keep it glued to content that moved.
+  window.addEventListener('scroll', hide, {passive:true, capture:true});
 })();
 
 </script>
