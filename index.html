@@ -1006,6 +1006,7 @@ function renderFullTimeline(stats, refDate, ext, dispMin, dispMax){
 }
 
 function renderDetailPanel(s, p){
+  const app=(s.appearances||[]).slice().sort();
   const chips = app.map(d=>`<span class="chip">${d}</span>`).join('') || '<span style="color:var(--cream-dim);">none yet</span>';
 
   let ownershipHtml = '';
