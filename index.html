@@ -1377,37 +1377,39 @@ async function refreshData(){
 (function setupSameDayHover(){
   const appEl = document.getElementById('app');
   if(!appEl) return;
-  function findLine(block){
-    let line = block.querySelector(':scope > .timeline-sameday-line');
+  let line = null;
+  function getLine(){
     if(!line){
       line = document.createElement('div');
       line.className = 'timeline-sameday-line';
-      block.appendChild(line);
+      document.body.appendChild(line);
     }
     return line;
   }
   function onOver(e){
     const el = e.target.closest('[data-day]');
     if(!el) return;
+    const track = el.closest('.timeline-track');
     const block = el.closest('.timeline-block');
-    if(!block) return;
+    if(!track || !block) return;
     const day = el.getAttribute('data-day');
-    const line = findLine(block);
+    const l = getLine();
+    // Reuse the dot's own left:% - it's already positioned within this exact
+    // track box, so copying it guarantees pixel-perfect horizontal alignment
+    // (no separate pixel math to get subtly wrong).
+    track.appendChild(l);
+    l.style.left = el.style.left;
+    const trackRect = track.getBoundingClientRect();
     const blockRect = block.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
-    line.style.left = (elRect.left + elRect.width/2 - blockRect.left) + 'px';
-    line.style.height = block.scrollHeight + 'px';
-    line.style.display = 'block';
+    l.style.top = (blockRect.top - trackRect.top) + 'px';
+    l.style.height = blockRect.height + 'px';
+    l.style.display = 'block';
     block.querySelectorAll(`[data-day="${day}"]`).forEach(m=>m.classList.add('sameday-highlight'));
   }
   function onOut(e){
     const el = e.target.closest('[data-day]');
     if(!el) return;
-    const block = el.closest('.timeline-block');
-    if(block){
-      const line = block.querySelector(':scope > .timeline-sameday-line');
-      if(line) line.style.display = 'none';
-    }
+    if(line) line.style.display = 'none';
     document.querySelectorAll('.sameday-highlight').forEach(m=>m.classList.remove('sameday-highlight'));
   }
   appEl.addEventListener('mouseover', onOver);
