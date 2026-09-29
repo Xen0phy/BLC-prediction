@@ -908,9 +908,10 @@
       "2024-11-19",
       "2025-04-15",
       "2025-10-28",
-      "2026-04-14"
+      "2026-04-14",
+      "2026-09-29"
     ],
-    "retired": false,
+    "retired": true,
     "type": "short",
     "vintage": null
   },
@@ -1070,7 +1071,9 @@
   {
     "name": "Shade-Touched",
     "added": "2025-09-09",
-    "appearances": [],
+    "appearances": [
+        "2026-09-29"
+    ],
     "retired": false,
     "type": "long",
     "vintage": null
