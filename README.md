@@ -7,11 +7,11 @@ Predicts the next Black Lion Chest weapon skin rotation and shows live Trading P
 
 _Reference date: 29 Sept 2026_
 
-**1. Snow Garden** - 46.2% (short)
-Last seen: 14 Apr 2026 · Estimated next: 04 Oct 2026 (due in **6d**)
+**1. Foefire** - 56.8% (long)
+Last seen: 07 Oct 2025 · Estimated next: 25 Sept 2026 (**3d** overdue)
 
-**2. Shade-Touched** - 44.6% (long)
-Last seen: - · Estimated next: 14 Aug 2026 (**46d** overdue)
+**2. Calligrapher's** - 50.1% (short)
+Last seen: 12 May 2026 · Estimated next: 07 Nov 2026 (due in **39d**)
 
 [Open the full tool](https://xen0phy.github.io/BLC-prediction/) for the complete roster, retired sets, live prices, and timeline.
 <!-- MOST-LIKELY:END -->
