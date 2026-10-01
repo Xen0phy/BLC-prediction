@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Black Lion Chest - Rotation Predictor</title>
+<title>Black Lion Chest Predictor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -42,8 +42,7 @@
   .layout-grid{display:grid;grid-template-columns:1fr;gap:32px;align-items:start;}
   @media (min-width:980px){
     .layout-grid{grid-template-columns:320px 1fr;}
-    .sidebar{position:sticky;top:20px;max-height:calc(100vh - 40px);overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;}
-    .sidebar::-webkit-scrollbar{display:none;}
+    .sidebar{position:sticky;top:20px;}
   }
   @media (max-width:979px){
     .layout-grid[data-tab="timeline"] .sidebar{display:none;}
@@ -1562,6 +1561,7 @@ function render(){
 
   document.getElementById('app').innerHTML = html;
   if(activeTab==='timeline' && tlExt){ attachRangeSliderHandlers(tlExt.min, tlExt.max); }
+  updateSidebarSticky(true);
 }
 
 function attachRangeSliderHandlers(fullMin, fullMax){
@@ -1668,6 +1668,28 @@ async function refreshData(){
   render();
 }
 
+// Sticky sidebar that follows the page scroll. When the sidebar is taller than
+// the viewport, its sticky offset moves with the scroll delta: scrolling down
+// reveals its lower part and then pins its bottom to the viewport bottom,
+// scrolling up reveals its upper part and then pins its top.
+const SIDEBAR_GAP = 20;
+let sidebarTop = SIDEBAR_GAP;
+let lastScrollY = window.scrollY;
+const desktopMQ = window.matchMedia('(min-width:980px)');
+function updateSidebarSticky(reset){
+  const sb = document.querySelector('.sidebar');
+  const y = window.scrollY;
+  const delta = reset ? 0 : y - lastScrollY;
+  lastScrollY = y;
+  if(!sb) return;
+  if(!desktopMQ.matches){ sb.style.top = ''; sidebarTop = SIDEBAR_GAP; return; }
+  const minTop = Math.min(SIDEBAR_GAP, window.innerHeight - sb.offsetHeight - SIDEBAR_GAP);
+  sidebarTop = Math.max(minTop, Math.min(SIDEBAR_GAP, sidebarTop - delta));
+  sb.style.top = sidebarTop + 'px';
+}
+window.addEventListener('scroll', ()=>updateSidebarSticky(false), {passive:true});
+window.addEventListener('resize', ()=>updateSidebarSticky(true));
+
 (async function init(){
   loadRefDate(); // cached fallback in case the live fetch below fails
   loadCollected();
@@ -1743,6 +1765,7 @@ async function refreshData(){
   // just drop it rather than trying to keep it glued to content that moved.
   window.addEventListener('scroll', hide, {passive:true, capture:true});
 })();
+
 
 </script>
 </body>
