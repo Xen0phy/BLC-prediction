@@ -212,15 +212,15 @@
   .price-cell{margin-top:4px;}
   td.price .lbl,.price-cell .lbl{color:var(--cream-dim);font-size:var(--fs-1);text-transform:uppercase;letter-spacing:0.4px;margin-right:4px;}
   .price-summary{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;margin-bottom:14px;font-size:var(--fs-3);}
-  .price-summary-grid{display:grid;grid-template-columns:1fr 1fr 2fr;gap:20px;}
+  .price-summary-grid{display:grid;grid-template-columns:1fr 1fr 1.6fr 1.6fr;gap:20px;}
+  @media (max-width:1250px) and (min-width:641px){.price-summary-grid{grid-template-columns:1fr 1fr;}.ps-col:nth-child(3){border-left:none;padding-left:0;}}
   @media (max-width:640px){.price-summary-grid{grid-template-columns:1fr;gap:12px;}}
   .ps-col{display:flex;flex-direction:column;gap:3px;border-left:2px solid var(--line-soft);padding-left:10px;}
   .ps-col:first-child{border-left:none;padding-left:0;}
-  .ps-col-cheapest{justify-content:center;}
   .ps-title{font-size:var(--fs-2);text-transform:uppercase;letter-spacing:0.6px;color:var(--gold);margin-bottom:2px;}
   .ps-line{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
   .ps-lbl{color:var(--cream-dim);text-transform:uppercase;font-size:var(--fs-2);letter-spacing:0.5px;min-width:78px;}
-  .ps-col-cheapest .ps-lbl{min-width:118px;}
+  .ps-col-cheapest .ps-lbl{min-width:36px;}
   .ps-col-cheapest .jump{color:var(--cream);font-weight:500;cursor:pointer;}
   .ps-col-cheapest .jump:hover{color:var(--gold);text-decoration:underline;}
   @keyframes rowflash{0%{background:rgba(201,151,63,0.55);}100%{background:transparent;}}
@@ -252,13 +252,24 @@
 
   button{font-family:var(--font-body);font-size:var(--fs-3);cursor:pointer;border-radius:4px;border:1px solid var(--line);background:var(--panel2);color:var(--cream-dim);padding:5px 10px;}
   button:hover{border-color:var(--gold);color:var(--cream);}
+  .merge-toggle{display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none;}
+  .merge-toggle input{position:absolute;opacity:0;width:0;height:0;}
+  .merge-toggle .switch{position:relative;width:36px;height:20px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);transition:background-color .15s ease,border-color .15s ease;flex:none;}
+  .merge-toggle .switch::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--cream-dim);transition:transform .15s ease,background-color .15s ease;}
+  .merge-toggle input:checked + .switch{background:rgba(201,151,63,0.25);border-color:var(--gold);}
+  .merge-toggle input:checked + .switch::after{transform:translateX(16px);background:var(--gold);}
+  .merge-toggle input:focus-visible + .switch{outline:2px solid var(--gold);outline-offset:2px;}
+  .merge-label{font-family:var(--font-display);font-size:var(--fs-5);font-weight:600;color:var(--cream-dim);transition:color .15s ease;}
+  .merge-toggle:hover .merge-label,.merge-toggle input:checked ~ .merge-label{color:var(--gold);}
   button:disabled{opacity:0.4;cursor:default;}
   button:disabled:hover{border-color:var(--line);color:var(--cream-dim);}
   table.roster th.sortable,.sort-opt{cursor:pointer;user-select:none;}
   table.roster th.sortable:hover,.sort-opt:hover{color:var(--gold);}
   table.roster th.sortable.active,.sort-opt.active{color:var(--gold);}
   .sort-arrow{font-size:9px;}
-  .section-tools{display:flex;align-items:center;gap:10px;}
+  .toggle-group{display:flex;align-items:center;gap:28px;flex-wrap:wrap;}
+  table.roster th.check-col{padding:6px 0;}
+  th.check-col button{padding:1px 5px;line-height:1.2;font-size:var(--fs-4);}
   button.small{padding:2px 7px;font-size:var(--fs-2);}
   button.small.danger{border-color:#a33;color:#e08a8a;}
   button.small.danger:hover{background:#3a1414;border-color:#c44;color:#f0a0a0;}
@@ -292,6 +303,8 @@ let rangeStart = null;
 let rangeEnd = null;
 let foldRetired = true;
 let listShowRetired = false;
+let mergeRetired = false;
+let hideCompleted = false;
 let sortKey = null; // null = default order (newest release first)
 let sortDir = 'asc';
 let showReleases = false;
@@ -692,6 +705,8 @@ function setSort(key){
   else { sortKey = key; sortDir = (key==='likelihood' || key==='count') ? 'desc' : 'asc'; }
   render();
 }
+function toggleMerge(){ mergeRetired = !mergeRetired; render(); }
+function toggleHideCompleted(){ hideCompleted = !hideCompleted; render(); }
 function resetSort(){ sortKey = null; sortDir = 'asc'; render(); }
 function sortArrow(key){
   return sortKey===key ? `<span class="sort-arrow">${sortDir==='asc'?' ▲':' ▼'}</span>` : '';
@@ -704,8 +719,9 @@ function sortOpt(key, label){
 }
 // Value a row sorts by for the current key; null means "no value" and always
 // sorts last, whichever direction is active.
-function sortValue(x, key, isRetired){
+function sortValue(x, key){
   const p=x.p, s=x.s;
+  const isRetired = !!s.retired;
   switch(key){
     case 'name': return s.name.toLowerCase();
     case 'type': return p.type==='short' ? 'rare' : p.type==='long' ? 'uncommon' : 'zzz';
@@ -729,11 +745,11 @@ function sortValue(x, key, isRetired){
   }
   return null;
 }
-function sortRows(rows, isRetired){
+function sortRows(rows){
   if(!sortKey) return rows;
   const dir = sortDir==='asc' ? 1 : -1;
   return rows
-    .map((x,i)=>({x, i, v:sortValue(x, sortKey, isRetired)}))
+    .map((x,i)=>({x, i, v:sortValue(x, sortKey)}))
     .sort((a,b)=>{
       const an=a.v==null, bn=b.v==null;
       if(an && bn) return a.i-b.i;
@@ -747,7 +763,7 @@ function sortRows(rows, isRetired){
 function jumpToSet(name){
   if(activeTab!=='list') activeTab = 'list';
   const set = sets.find(s=>s.name===name);
-  if(set && set.retired && !listShowRetired) listShowRetired = true;
+  if(set && set.retired && !listShowRetired && !mergeRetired) listShowRetired = true;
   render();
   const row = Array.from(document.querySelectorAll('tr[data-set]')).find(r=>r.getAttribute('data-set')===name);
   if(!row) return;
@@ -1170,7 +1186,7 @@ function render(){
       <span class="ref-date-value">${nextUpdateDate? fmtDisplay(toUTC(nextUpdateDate)) : fmtDisplay(todayUTC())}</span>
     </div>
     <button class="small" id="fetch-shaman-btn" onclick="fetchNextUpdateFromShaman()" ${shamanStatus==='loading'?'disabled':''}>${shamanStatus==='loading'?'Fetching…':'Refresh from thatshaman.com'}</button>
-    <span class="note">${shamanStatus==='error' ? "Could not reach thatshaman.com - falling back to today's date. Try refreshing." : (nextUpdateDate? 'Next update date, auto-fetched from thatshaman.com.' : 'Using today - thatshaman.com has no upcoming date posted yet.')}</span>
+    ${shamanStatus==='error' ? `<span class="note">Could not reach thatshaman.com - falling back to today's date. Try refreshing.</span>` : (nextUpdateDate ? '' : `<span class="note">Using today - thatshaman.com has no upcoming date posted yet.</span>`)}
   </div>`;
 
   html += `<div class="ref-bar account-bar">
@@ -1266,6 +1282,7 @@ function render(){
         if(a.buy>0 && (!cheapestAvgBuy || a.buy<cheapestAvgBuy.val)) cheapestAvgBuy={name:s.name, val:a.buy};
         if(a.sell>0 && (!cheapestAvgSell || a.sell<cheapestAvgSell.val)) cheapestAvgSell={name:s.name, val:a.sell};
       });
+      const cheapLine = (lbl, c)=>`<div class="ps-line"><span class="ps-lbl">${lbl}</span>${c?`<b class="jump" onclick="jumpToSet('${escapeAttr(c.name)}')" title="Jump to this set in the list">${escapeHtml(c.name)}</b> ${coinHtml(c.val)}`:'-'}</div>`;
       mainHtml += `<div class="price-summary">
         <div class="price-summary-grid">
           <div class="ps-col">
@@ -1279,25 +1296,30 @@ function render(){
             <div class="ps-line"><span class="ps-lbl">Sell</span>${coinHtml(allSell)}</div>
           </div>
           <div class="ps-col ps-col-cheapest">
-            <div class="ps-line"><span class="ps-lbl">Cheapest buy</span>${cheapestBuy?`<b class="jump" onclick="jumpToSet('${escapeAttr(cheapestBuy.name)}')" title="Jump to this set in the list">${escapeHtml(cheapestBuy.name)}</b> ${coinHtml(cheapestBuy.val)}`:'-'}</div>
-            <div class="ps-line"><span class="ps-lbl">Cheapest sell</span>${cheapestSell?`<b class="jump" onclick="jumpToSet('${escapeAttr(cheapestSell.name)}')" title="Jump to this set in the list">${escapeHtml(cheapestSell.name)}</b> ${coinHtml(cheapestSell.val)}`:'-'}</div>
-            <div class="ps-line"><span class="ps-lbl">Cheapest avg buy</span>${cheapestAvgBuy?`<b class="jump" onclick="jumpToSet('${escapeAttr(cheapestAvgBuy.name)}')" title="Jump to this set in the list">${escapeHtml(cheapestAvgBuy.name)}</b> ${coinHtml(cheapestAvgBuy.val)}`:'-'}</div>
-            <div class="ps-line"><span class="ps-lbl">Cheapest avg sell</span>${cheapestAvgSell?`<b class="jump" onclick="jumpToSet('${escapeAttr(cheapestAvgSell.name)}')" title="Jump to this set in the list">${escapeHtml(cheapestAvgSell.name)}</b> ${coinHtml(cheapestAvgSell.val)}`:'-'}</div>
+            <div class="ps-title">Cheapest buy/sell</div>
+            ${cheapLine('Buy', cheapestBuy)}
+            ${cheapLine('Sell', cheapestSell)}
+          </div>
+          <div class="ps-col ps-col-cheapest">
+            <div class="ps-title">Cheapest avg buy/sell</div>
+            ${cheapLine('Buy', cheapestAvgBuy)}
+            ${cheapLine('Sell', cheapestAvgSell)}
           </div>
         </div>
       </div>`;
     }
 
-    mainHtml += `<div class="section-head"><h2>Full roster</h2><span class="section-tools"><span class="hint">${sortKey?'':'newest release date first - '}click a header to sort, a name for details</span><button class="small" onclick="resetSort()" ${sortKey?'':'disabled'} title="Reset to default order" aria-label="Reset to default order">&#8634;</button></span></div>`;
+    mainHtml += `<div class="section-head"><div class="toggle-group"><label class="merge-toggle" title="Show retired sets in this list, sorted together with the active ones"><input type="checkbox" ${mergeRetired?'checked':''} ${retiredCount?'':'disabled'} onchange="toggleMerge()"><span class="switch"></span><span class="merge-label">Merge retired sets</span></label><label class="merge-toggle" title="Hide sets you have fully unlocked or checked off"><input type="checkbox" ${hideCompleted?'checked':''} onchange="toggleHideCompleted()"><span class="switch"></span><span class="merge-label">Hide completed sets</span></label></div></div>`;
     mainHtml += `<table class="roster"><colgroup>
-      <col style="width:4%"><col style="width:19%"><col style="width:8%"><col style="width:9%"><col style="width:10%"><col style="width:10%"><col style="width:12%"><col style="width:14%"><col style="width:14%">
+      <col style="width:5%"><col style="width:18%"><col style="width:8%"><col style="width:9%"><col style="width:10%"><col style="width:10%"><col style="width:12%"><col style="width:14%"><col style="width:14%">
     </colgroup><thead><tr>
-      <th class="check-col"></th>${sortTh('name','Set')}${sortTh('type','Type')}${sortTh('count','Appearances','num')}${sortTh('last','Last seen','num')}${sortTh('next','Est. next','num')}${sortTh('likelihood','Likelihood')}<th>Price (${sortOpt('priceBuy','Buy')} / ${sortOpt('priceSell','Sell')})</th><th>Avg (${sortOpt('avgBuy','Buy')} / ${sortOpt('avgSell','Sell')})</th>
+      <th class="check-col"><button class="small" onclick="resetSort()" ${sortKey?'':'disabled'} title="Reset to default order" aria-label="Reset to default order">&#8634;</button></th>${sortTh('name','Set')}${sortTh('type','Type')}${sortTh('count','Appearances','num')}${sortTh('last','Last seen','num')}${sortTh('next','Est. next','num')}${sortTh('likelihood','Likelihood')}<th>Price (${sortOpt('priceBuy','Buy')} / ${sortOpt('priceSell','Sell')})</th><th>Avg (${sortOpt('avgBuy','Buy')} / ${sortOpt('avgSell','Sell')})</th>
     </tr></thead><tbody>`;
     // One row builder for both groups. Retired sets have no prediction, so
     // their vintage tag takes the Est. next + Likelihood cells.
-    const rosterRow = (x, isRetired)=>{
+    const rosterRow = (x)=>{
       const p=x.p, s=x.s;
+      const isRetired = !!s.retired;
       const own = setOwnership(s.name);
       const autoComplete = !!(own && own.complete);
       const isCollected = isEffectivelyCollected(s.name);
@@ -1319,19 +1341,27 @@ function render(){
       ${expandedName===s.name ? `<tr><td colspan="9">${renderDetailPanel(s,p)}</td></tr>` : ''}
       `;
     };
-    sortRows(chronological.slice().reverse(), false).forEach(x=>{ mainHtml += rosterRow(x, false); });
+    const retiredScored = sets.filter(s=>s.retired)
+      .map(s=>({s, p:predictSet(s, stats, refDate)}))
+      .sort((a,b)=>toUTC(b.s.added)-toUTC(a.s.added))
+      .filter(x=>!(hideCompleted && isEffectivelyCollected(x.s.name)));
+    const visibleSet = x=>!(hideCompleted && isEffectivelyCollected(x.s.name));
+    const activeScored = chronological.slice().reverse().filter(visibleSet);
 
-    if(retiredCount){
-      const vintageCount = sets.filter(s=>s.vintage).length;
-      mainHtml += `<tr class="retired-divider" onclick="toggleListRetired()" role="button" tabindex="0"><td colspan="9">
-        <span class="rd-title"><span class="divider-arrow">${listShowRetired ? '&#9662;' : '&#9656;'}</span>Retired sets</span>
-        <span class="hint">${listShowRetired?`${vintageCount?`${vintageCount} have gone vintage`:''}`:'click to show'}</span>
-      </td></tr>`;
-      if(listShowRetired){
-        sortRows(sets.filter(s=>s.retired)
-          .map(s=>({s, p:predictSet(s, stats, refDate)}))
-          .sort((a,b)=>toUTC(b.s.added)-toUTC(a.s.added)), true)
-          .forEach(x=>{ mainHtml += rosterRow(x, true); });
+    if(mergeRetired){
+      // One list: both groups together, newest release first (stable, so
+      // ties keep their group order), then the chosen sort on top.
+      const all = activeScored.concat(retiredScored).sort((a,b)=>toUTC(b.s.added)-toUTC(a.s.added));
+      sortRows(all).forEach(x=>{ mainHtml += rosterRow(x); });
+    } else {
+      sortRows(activeScored).forEach(x=>{ mainHtml += rosterRow(x); });
+      if(retiredCount){
+        const vintageCount = sets.filter(s=>s.vintage).length;
+        mainHtml += `<tr class="retired-divider" onclick="toggleListRetired()" role="button" tabindex="0"><td colspan="9">
+          <span class="rd-title"><span class="divider-arrow">${listShowRetired ? '&#9662;' : '&#9656;'}</span>Retired sets</span>
+          <span class="hint">${listShowRetired?`${vintageCount?`${vintageCount} have gone vintage`:''}`:'click to show'}</span>
+        </td></tr>`;
+        if(listShowRetired) sortRows(retiredScored).forEach(x=>{ mainHtml += rosterRow(x); });
       }
     }
     mainHtml += `</tbody></table>`;
