@@ -206,7 +206,11 @@
   .ps-title{font-size:var(--fs-2);text-transform:uppercase;letter-spacing:0.6px;color:var(--gold);margin-bottom:2px;}
   .ps-line{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
   .ps-lbl{color:var(--cream-dim);text-transform:uppercase;font-size:var(--fs-2);letter-spacing:0.5px;min-width:78px;}
-  .ps-col-cheapest .ps-lbl{min-width:88px;}
+  .ps-col-cheapest .ps-lbl{min-width:118px;}
+  .ps-col-cheapest .jump{color:var(--cream);font-weight:500;cursor:pointer;}
+  .ps-col-cheapest .jump:hover{color:var(--gold);text-decoration:underline;}
+  @keyframes rowflash{0%{background:rgba(201,151,63,0.55);}100%{background:transparent;}}
+  tr.row-flash td{animation:rowflash 2.2s ease-out;}
   .ps-col-cheapest b{color:var(--cream);font-weight:500;}
   .price-summary .note{color:var(--cream-dim);font-family:var(--font-body);display:block;margin-top:10px;padding-top:9px;border-top:1px solid var(--line-soft);}
   .price-incomplete{color:var(--unknown);font-size:var(--fs-1);margin-left:4px;}
@@ -637,6 +641,45 @@ function remainingSetPrice(name){
 // ownership is reflected), or the full-set price otherwise.
 function effectivePrice(name){
   return accountStatus==='loaded' ? remainingSetPrice(name) : prices[name];
+}
+// Average price per remaining skin in a set. Only skins that actually have a
+// listing count toward each average, so a skin with no buy order does not
+// drag the buy average toward zero. With remaining=true, skins already
+// unlocked on the connected account are left out.
+function avgSetPrice(name, remaining){
+  const ids = skinIds[name] || [];
+  let bSum=0, bN=0, sSum=0, sN=0;
+  ids.forEach(id=>{
+    if(remaining && isItemOwned(id)) return;
+    const d = itemPriceMap[id];
+    if(d && d.buys){ bSum += d.buys.unit_price; bN++; }
+    if(d && d.sells){ sSum += d.sells.unit_price; sN++; }
+  });
+  return {buy: bN? bSum/bN : 0, sell: sN? sSum/sN : 0};
+}
+function effectiveAvg(name){
+  return avgSetPrice(name, accountStatus==='loaded');
+}
+function avgCellHtml(name){
+  if(pricesStatus==='loading') return `<span class="coin dim">loading…</span>`;
+  if(pricesStatus!=='loaded') return `<span class="coin dim">-</span>`;
+  const a = isEffectivelyCollected(name) ? avgSetPrice(name, false) : effectiveAvg(name);
+  if(!a.buy && !a.sell) return `<span class="coin dim">-</span>`;
+  return `<span class="lbl">Buy</span>${coinHtml(a.buy)}<br><span class="lbl">Sell</span>${coinHtml(a.sell)}`;
+}
+// Scrolls to a set's row in the list and flashes it. Opens the retired table
+// first when the set lives there and that table is collapsed.
+function jumpToSet(name){
+  if(activeTab!=='list') activeTab = 'list';
+  const set = sets.find(s=>s.name===name);
+  if(set && set.retired && !listShowRetired) listShowRetired = true;
+  render();
+  const row = Array.from(document.querySelectorAll('tr[data-set]')).find(r=>r.getAttribute('data-set')===name);
+  if(!row) return;
+  row.scrollIntoView({behavior:'smooth', block:'center'});
+  row.classList.remove('row-flash');
+  void row.offsetWidth;
+  row.classList.add('row-flash');
 }
 function accountNoteText(){
   if(!apiKey) return confirmedComplete.size
@@ -1138,13 +1181,16 @@ function render(){
         const p=effectivePrice(x.s.name); if(p){ activeBuy+=p.buy; activeSell+=p.sell; }
       });
       let allBuy=0, allSell=0;
-      let cheapestBuy=null, cheapestSell=null;
+      let cheapestBuy=null, cheapestSell=null, cheapestAvgBuy=null, cheapestAvgSell=null;
       sets.forEach(s=>{
         if(isEffectivelyCollected(s.name)) return;
         const p=effectivePrice(s.name); if(!p) return;
         allBuy+=p.buy; allSell+=p.sell;
         if(p.buy>0 && (!cheapestBuy || p.buy<cheapestBuy.val)) cheapestBuy={name:s.name, val:p.buy};
         if(p.sell>0 && (!cheapestSell || p.sell<cheapestSell.val)) cheapestSell={name:s.name, val:p.sell};
+        const a=effectiveAvg(s.name);
+        if(a.buy>0 && (!cheapestAvgBuy || a.buy<cheapestAvgBuy.val)) cheapestAvgBuy={name:s.name, val:a.buy};
+        if(a.sell>0 && (!cheapestAvgSell || a.sell<cheapestAvgSell.val)) cheapestAvgSell={name:s.name, val:a.sell};
       });
       const effectiveCollectedCount = sets.filter(s=>isEffectivelyCollected(s.name)).length;
       const collectedNote = effectiveCollectedCount ? ` - ${effectiveCollectedCount} collected set${effectiveCollectedCount!==1?'s':''} excluded` : '';
@@ -1162,19 +1208,21 @@ function render(){
             <div class="ps-line"><span class="ps-lbl">Sell</span>${coinHtml(allSell)}</div>
           </div>
           <div class="ps-col ps-col-cheapest">
-            <div class="ps-line"><span class="ps-lbl">Cheapest buy</span>${cheapestBuy?`<b>${escapeHtml(cheapestBuy.name)}</b> ${coinHtml(cheapestBuy.val)}`:'-'}</div>
-            <div class="ps-line"><span class="ps-lbl">Cheapest sell</span>${cheapestSell?`<b>${escapeHtml(cheapestSell.name)}</b> ${coinHtml(cheapestSell.val)}`:'-'}</div>
+            <div class="ps-line"><span class="ps-lbl">Cheapest buy</span>${cheapestBuy?`<b class="jump" onclick="jumpToSet('${escapeAttr(cheapestBuy.name)}')" title="Jump to this set in the list">${escapeHtml(cheapestBuy.name)}</b> ${coinHtml(cheapestBuy.val)}`:'-'}</div>
+            <div class="ps-line"><span class="ps-lbl">Cheapest sell</span>${cheapestSell?`<b class="jump" onclick="jumpToSet('${escapeAttr(cheapestSell.name)}')" title="Jump to this set in the list">${escapeHtml(cheapestSell.name)}</b> ${coinHtml(cheapestSell.val)}`:'-'}</div>
+            <div class="ps-line"><span class="ps-lbl">Cheapest avg buy</span>${cheapestAvgBuy?`<b class="jump" onclick="jumpToSet('${escapeAttr(cheapestAvgBuy.name)}')" title="Jump to this set in the list">${escapeHtml(cheapestAvgBuy.name)}</b> ${coinHtml(cheapestAvgBuy.val)}`:'-'}</div>
+            <div class="ps-line"><span class="ps-lbl">Cheapest avg sell</span>${cheapestAvgSell?`<b class="jump" onclick="jumpToSet('${escapeAttr(cheapestAvgSell.name)}')" title="Jump to this set in the list">${escapeHtml(cheapestAvgSell.name)}</b> ${coinHtml(cheapestAvgSell.val)}`:'-'}</div>
           </div>
         </div>
-        <span class="note">live from the GW2 API${pricesUpdatedAt?', updated '+pricesUpdatedAt.toLocaleTimeString():''} - sums are buy-order and sell-listing totals across all skins in each set${collectedNote}${remainingNote}; cheapest buy/sell are the single lowest-priced uncollected sets. Check off sets below as you collect them to update these.</span>
+        <span class="note">live from the GW2 API${pricesUpdatedAt?', updated '+pricesUpdatedAt.toLocaleTimeString():''} - sums are buy-order and sell-listing totals across all skins in each set${collectedNote}${remainingNote}; cheapest buy/sell are the single lowest-priced uncollected sets, and cheapest avg buy/sell the lowest average price per remaining skin. Click a set name there to jump to its row. Check off sets below as you collect them to update these.</span>
       </div>`;
     }
 
     mainHtml += `<div class="section-head"><h2>Full active roster</h2><span class="hint">oldest release date first - click a name for details</span></div>`;
     mainHtml += `<table class="roster"><colgroup>
-      <col style="width:4%"><col style="width:22%"><col style="width:9%"><col style="width:10%"><col style="width:11%"><col style="width:11%"><col style="width:12%"><col style="width:21%">
+      <col style="width:4%"><col style="width:19%"><col style="width:8%"><col style="width:9%"><col style="width:10%"><col style="width:10%"><col style="width:12%"><col style="width:14%"><col style="width:14%">
     </colgroup><thead><tr>
-      <th class="check-col"></th><th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th class="num">Est. next</th><th>Likelihood</th><th>Price (buy / sell)</th>
+      <th class="check-col"></th><th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th class="num">Est. next</th><th>Likelihood</th><th>Price (buy / sell)</th><th>Avg per skin (buy / sell)</th>
     </tr></thead><tbody>`;
     chronological.forEach(x=>{
       const p=x.p, s=x.s;
@@ -1182,7 +1230,7 @@ function render(){
       const autoComplete = !!(own && own.complete);
       const isCollected = isEffectivelyCollected(s.name);
       const checkAttrs = autoComplete ? 'disabled' : `onclick="toggleCollected('${escapeAttr(s.name)}', event)"`;
-      mainHtml += `<tr class="${isCollected?'is-collected':''}">
+      mainHtml += `<tr class="${isCollected?'is-collected':''}" data-set="${escapeHtml(s.name)}">
         <td class="check-col" ${autoComplete?'':`onclick="toggleCollected('${escapeAttr(s.name)}', event)"`}><input type="checkbox" class="collected-check" ${isCollected?'checked':''} ${checkAttrs} title="${autoComplete?'Fully unlocked on your account':'Mark as collected'}"></td>
         <td class="name" onclick="toggleExpand('${escapeAttr(s.name)}')">${escapeHtml(s.name)}${own?` <span class="owned-frac ${ownedFracClass(own)}">${own.owned}/${own.total}</span>`:''}</td>
         <td>${typeTag(p.type)}</td>
@@ -1191,8 +1239,9 @@ function render(){
         <td class="num">${fmtDisplay(p.predicted)}</td>
         <td><div class="pct-bar-wrap"><div class="pct-bar-track"><div class="pct-bar-fill type-${p.type}" style="width:${clamp(x.barPct,2,100)}%"></div></div><span class="pct-num type-${p.type}">${x.pct.toFixed(1)}%</span></div></td>
         <td class="price">${priceCellHtml(s.name)}</td>
+        <td class="price">${avgCellHtml(s.name)}</td>
       </tr>
-      ${expandedName===s.name ? `<tr><td colspan="8">${renderDetailPanel(s,p)}</td></tr>` : ''}
+      ${expandedName===s.name ? `<tr><td colspan="9">${renderDetailPanel(s,p)}</td></tr>` : ''}
       `;
     });
     mainHtml += `</tbody></table>`;
@@ -1208,9 +1257,9 @@ function render(){
           .map(s=>({s, p:predictSet(s, stats, refDate)}))
           .sort((a,b)=>toUTC(b.s.added)-toUTC(a.s.added));
         mainHtml += `<table class="roster"><colgroup>
-          <col style="width:4%"><col style="width:25%"><col style="width:10%"><col style="width:12%"><col style="width:13%"><col style="width:21%"><col style="width:15%">
+          <col style="width:4%"><col style="width:20%"><col style="width:8%"><col style="width:10%"><col style="width:11%"><col style="width:17%"><col style="width:17%"><col style="width:13%">
         </colgroup><thead><tr>
-          <th class="check-col"></th><th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th>Price (buy / sell)</th><th>Vintage</th>
+          <th class="check-col"></th><th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th>Price (buy / sell)</th><th>Avg per skin (buy / sell)</th><th>Vintage</th>
         </tr></thead><tbody>`;
         retiredRows.forEach(x=>{
           const p=x.p, s=x.s;
@@ -1218,16 +1267,17 @@ function render(){
           const autoComplete = !!(own && own.complete);
           const isCollected = isEffectivelyCollected(s.name);
           const checkAttrs = autoComplete ? 'disabled' : `onclick="toggleCollected('${escapeAttr(s.name)}', event)"`;
-          mainHtml += `<tr class="${isCollected?'is-collected':''}">
+          mainHtml += `<tr class="${isCollected?'is-collected':''}" data-set="${escapeHtml(s.name)}">
             <td class="check-col" ${autoComplete?'':`onclick="toggleCollected('${escapeAttr(s.name)}', event)"`}><input type="checkbox" class="collected-check" ${isCollected?'checked':''} ${checkAttrs} title="${autoComplete?'Fully unlocked on your account':'Mark as collected'}"></td>
             <td class="name" onclick="toggleExpand('${escapeAttr(s.name)}')">${escapeHtml(s.name)}${own?` <span class="owned-frac ${ownedFracClass(own)}">${own.owned}/${own.total}</span>`:''}</td>
             <td>${typeTag(p.type)}</td>
             <td class="num">${p.count}</td>
             <td class="num">${p.lastDate?fmtDisplay(p.lastDate):'-'}</td>
             <td class="price">${priceCellHtml(s.name)}</td>
+            <td class="price">${avgCellHtml(s.name)}</td>
             <td>${vintageTag(s.vintage)}</td>
           </tr>
-          ${expandedName===s.name ? `<tr><td colspan="7">${renderDetailPanel(s,p)}</td></tr>` : ''}
+          ${expandedName===s.name ? `<tr><td colspan="8">${renderDetailPanel(s,p)}</td></tr>` : ''}
           `;
         });
         mainHtml += `</tbody></table>`;
