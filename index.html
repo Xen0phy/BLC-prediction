@@ -212,15 +212,16 @@
   .price-cell{margin-top:4px;}
   td.price .lbl,.price-cell .lbl{color:var(--cream-dim);font-size:var(--fs-1);text-transform:uppercase;letter-spacing:0.4px;margin-right:4px;}
   .price-summary{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;margin-bottom:14px;font-size:var(--fs-3);}
-  .price-summary-grid{display:grid;grid-template-columns:1fr 1fr 1.6fr 1.6fr;gap:20px;}
-  @media (max-width:1250px) and (min-width:641px){.price-summary-grid{grid-template-columns:1fr 1fr;}.ps-col:nth-child(3){border-left:none;padding-left:0;}}
-  @media (max-width:640px){.price-summary-grid{grid-template-columns:1fr;gap:12px;}}
-  .ps-col{display:flex;flex-direction:column;gap:3px;border-left:2px solid var(--line-soft);padding-left:10px;}
+  .price-summary-grid{display:flex;gap:20px;}
+  /* Equal shares by default (flex-basis 0); a column whose content can't shrink further (min-width auto) takes what it needs from the others. */
+  .ps-col{flex:1 1 0;display:flex;flex-direction:column;gap:3px;border-left:2px solid var(--line-soft);padding-left:10px;}
   .ps-col:first-child{border-left:none;padding-left:0;}
+  @media (max-width:1300px) and (min-width:641px){.price-summary-grid{flex-wrap:wrap;}.ps-col{flex:1 1 calc(50% - 10px);}.ps-col:nth-child(3){border-left:none;padding-left:0;}}
+  @media (max-width:640px){.price-summary-grid{flex-direction:column;gap:12px;}.ps-col{border-left:none;padding-left:0;}}
   .ps-title{font-size:var(--fs-2);text-transform:uppercase;letter-spacing:0.6px;color:var(--gold);margin-bottom:2px;}
   .ps-line{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
-  .ps-lbl{color:var(--cream-dim);text-transform:uppercase;font-size:var(--fs-2);letter-spacing:0.5px;min-width:78px;}
-  .ps-col-cheapest .ps-lbl{min-width:36px;}
+  .ps-lbl{color:var(--cream-dim);text-transform:uppercase;font-size:var(--fs-2);letter-spacing:0.5px;min-width:36px;}
+  .ps-col:not(.ps-col-cheapest) .ps-line{flex-wrap:nowrap;}
   .ps-col-cheapest .jump{color:var(--cream);font-weight:500;cursor:pointer;}
   .ps-col-cheapest .jump:hover{color:var(--gold);text-decoration:underline;}
   @keyframes rowflash{0%{background:rgba(201,151,63,0.55);}100%{background:transparent;}}
