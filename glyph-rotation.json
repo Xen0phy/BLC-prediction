@@ -1,0 +1,14 @@
+{
+  "current": "Timekeeper Reaper",
+  "pairs": [
+    { "name": "Alchemy Overload",     "items": [ { "name": "Alchemy",       "id": 90664 }, { "name": "Overload",    "id": 92915 } ] },
+    { "name": "Virtue Watchknight",   "items": [ { "name": "Virtue",        "id": 92833 }, { "name": "Watchknight", "id": 87424 } ] },
+    { "name": "Flight Industry",      "items": [ { "name": "Flight",        "id": 87434 }, { "name": "Industry",    "id": 87451 } ] },
+    { "name": "Leatherworker Tailor", "items": [ { "name": "Leatherworker", "id": 87452 }, { "name": "Tailor",      "id": 87460 } ] },
+    { "name": "Herbalist Unbound",    "items": [ { "name": "Herbalist",     "id": 88298 }, { "name": "Unbound",     "id": 87410 } ] },
+    { "name": "Bounty Scavenger",     "items": [ { "name": "Bounty",        "id": 87385 }, { "name": "Scavenger",   "id": 87426 } ] },
+    { "name": "Forester Prospector",  "items": [ { "name": "Forester",      "id": 87559 }, { "name": "Prospector",  "id": 87515 } ] },
+    { "name": "Crucible Volatility",  "items": [ { "name": "Crucible",      "id": 90538 }, { "name": "Volatility",  "id": 88045 } ] },
+    { "name": "Timekeeper Reaper",    "items": [ { "name": "Timekeeper",    "id": 92682 }, { "name": "Reaper",      "id": 90726 } ] }
+  ]
+}
