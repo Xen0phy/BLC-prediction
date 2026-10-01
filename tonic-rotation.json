@@ -1,0 +1,10 @@
+{
+  "current": "Forest",
+  "order": [
+    { "name": "Furniture", "id": 49146 },
+    { "name": "Forest",    "id": 49147 },
+    { "name": "Desert",    "id": 90008 },
+    { "name": "Branded",   "id": 87126 },
+    { "name": "Beast",     "id": 49145 }
+  ]
+}

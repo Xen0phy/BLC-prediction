@@ -112,6 +112,7 @@
   .predict-head .predict-pct{white-space:nowrap;}
   .sidebar h2.sidebar-section{margin:0 0 12px;}
   .predict-card.slot-glyph::before{background:var(--cream-dim);}
+  .slot-other{margin-bottom:16px;}
   .glyph-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px;}
   .glyph-title{font-family:var(--font-num);font-size:var(--fs-2);text-transform:uppercase;letter-spacing:1.5px;color:var(--cream-dim);}
   .glyph-row{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:4px 12px;padding:9px 0;border-top:1px solid var(--line-soft);}
@@ -320,9 +321,10 @@ let sortKey = null; // null = default order (newest release first)
 let sortDir = 'asc';
 let showReleases = false;
 let skinIds = {};
+let tonicRotation = null; // from tonic-rotation.json: {current, order:[{name,id}]}
 let glyphRotation = null; // from glyph-rotation.json: {current, pairs:[{name, items:[{name,id}]}]}
-let glyphPrices = {}; // item id -> {buy, sell}
-let glyphItemNames = {}; // item id -> API name, used to sanity-check the configured ids
+let otherPrices = {}; // glyph + tonic item id -> {buy, sell}
+let otherItemNames = {}; // item id -> API name, used to sanity-check the configured ids
 let prices = {};
 let pricesStatus = 'idle'; // idle | loading | loaded | error
 let pricesErrorMsg = null;
@@ -415,38 +417,46 @@ async function loadGlyphRotation(){
     glyphRotation = await res.json();
   }catch(e){ glyphRotation = null; }
 }
-function glyphIds(){
+async function loadTonicRotation(){
+  try{
+    const res = await fetch('./tonic-rotation.json', {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    tonicRotation = await res.json();
+  }catch(e){ tonicRotation = null; }
+}
+function otherItemIds(){
   const ids = [];
   ((glyphRotation && glyphRotation.pairs) || []).forEach(p=>(p.items||[]).forEach(it=>{ if(it.id) ids.push(it.id); }));
+  ((tonicRotation && tonicRotation.order) || []).forEach(it=>{ if(it.id) ids.push(it.id); });
   return ids;
 }
-// Checks the configured ids against the API's item names so a wrong id shows
+// Checks the configured glyph/tonic ids against the API's item names so a wrong id shows
 // a warning on the card instead of quietly showing another item's price.
 async function loadGlyphNames(){
-  const ids = glyphIds();
+  const ids = otherItemIds();
   if(!ids.length) return;
   try{
     const res = await fetch(`https://api.guildwars2.com/v2/items?ids=${ids.join(',')}`);
     if(!res.ok) return;
     const out = {};
     (await res.json()).forEach(d=>{ out[d.id] = d.name; });
-    glyphItemNames = out;
+    otherItemNames = out;
     render();
   }catch(e){ /* non-fatal: the card just shows no warnings */ }
 }
-// One request for the whole rotation, so advancing "current" in the json
+// One request for every configured rotation item, so advancing "current" in the json
 // never needs a refetch. Failure here must not break the main price load.
 async function loadGlyphPrices(){
-  const ids = glyphIds();
+  const ids = otherItemIds();
   if(!ids.length) return;
   try{
     const res = await fetch(`https://api.guildwars2.com/v2/commerce/prices?ids=${ids.join(',')}`);
-    if(!res.ok){ glyphPrices = {}; return; } // 404: none listed
+    if(!res.ok){ otherPrices = {}; return; } // 404: none listed
     const out = {};
     (await res.json()).forEach(d=>{
       out[d.id] = {buy: d.buys ? d.buys.unit_price : null, sell: d.sells ? d.sells.unit_price : null};
     });
-    glyphPrices = out;
+    otherPrices = out;
   }catch(e){ /* keep whatever we had */ }
 }
 function nextGlyphPair(){
@@ -456,34 +466,54 @@ function nextGlyphPair(){
   if(i<0) return {error:`"${r.current}" is not listed in glyph-rotation.json`};
   return {current: r.pairs[i], pair: r.pairs[(i+1)%r.pairs.length]};
 }
-function glyphPriceHtml(id){
+function otherPriceHtml(id){
   if(!id) return `<span class="coin dim">-</span>`;
-  const p = glyphPrices[id];
+  const p = otherPrices[id];
   if(!p){
     if(pricesStatus==='loading' || pricesStatus==='idle') return `<span class="coin dim">loading…</span>`;
     return `<span class="coin dim">-</span>`;
   }
   return `<span class="lbl">Buy</span>${p.buy?coinHtml(p.buy):'-'}<br><span class="lbl">Sell</span>${p.sell?coinHtml(p.sell):'-'}`;
 }
-function glyphSectionHtml(){
-  const n = nextGlyphPair();
-  if(!n) return '';
-  let body;
-  if(n.error){
-    body = `<div style="color:var(--cream-dim);font-size:var(--fs-3);padding:6px 0;">${escapeHtml(n.error)}</div>`;
-  } else {
-    body = n.pair.items.map(it=>{
-      const apiName = glyphItemNames[it.id];
-      const bad = apiName && !(apiName.toLowerCase().includes(String(it.name).toLowerCase()) && apiName.includes('Unused'));
-      const warn = bad ? `<span class="glyph-warn" title="Item ${it.id} is &quot;${escapeHtml(apiName)}&quot;, expected the unused ${escapeHtml(it.name)} glyph. Check glyph-rotation.json.">&#9888;</span>` : '';
-      return `<div class="glyph-row"><div class="glyph-name">${escapeHtml(it.name)}${warn}</div><div class="price-cell">${glyphPriceHtml(it.id)}</div></div>`;
-    }).join('') + `<div class="glyph-after">After ${escapeHtml(n.current.name)}</div>`;
-  }
-  return `<h2 class="sidebar-section">Other items</h2>
-    <div class="predict-card slot-glyph">
-      <div class="glyph-head"><span class="glyph-title">Glyphs</span><span class="glyph-title">next pair</span></div>
-      ${body}
+function nextTonic(){
+  const r = tonicRotation;
+  if(!r || !Array.isArray(r.order) || r.order.length===0) return null;
+  const i = r.order.findIndex(t=>t.name===r.current);
+  if(i<0) return {error:`"${r.current}" is not listed in tonic-rotation.json`};
+  return {current: r.order[i], next: r.order[(i+1)%r.order.length]};
+}
+function otherRowHtml(it, matches){
+  const apiName = otherItemNames[it.id];
+  const bad = apiName && !matches(apiName);
+  const warn = bad ? `<span class="glyph-warn" title="Item ${it.id} is &quot;${escapeHtml(apiName)}&quot;, which does not look like ${escapeHtml(it.name)}. Check the rotation json.">&#9888;</span>` : '';
+  return `<div class="glyph-row"><div class="glyph-name">${escapeHtml(it.name)}${warn}</div><div class="price-cell">${otherPriceHtml(it.id)}</div></div>`;
+}
+function otherCardHtml(title, hint, bodyHtml){
+  return `<div class="predict-card slot-glyph slot-other">
+      <div class="glyph-head"><span class="glyph-title">${title}</span><span class="glyph-title">${hint}</span></div>
+      ${bodyHtml}
     </div>`;
+}
+function otherErrorHtml(msg){
+  return `<div style="color:var(--cream-dim);font-size:var(--fs-3);padding:6px 0;">${escapeHtml(msg)}</div>`;
+}
+function otherItemsHtml(){
+  const g = nextGlyphPair(), t = nextTonic();
+  if(!g && !t) return '';
+  let html = `<h2 class="sidebar-section">Other items</h2>`;
+  if(g){
+    const body = g.error ? otherErrorHtml(g.error)
+      : g.pair.items.map(it=>otherRowHtml(it, n=>n.toLowerCase().includes(String(it.name).toLowerCase()) && n.includes('Unused'))).join('')
+        + `<div class="glyph-after">After ${escapeHtml(g.current.name)}</div>`;
+    html += otherCardHtml('Glyphs', 'next pair', body);
+  }
+  if(t){
+    const body = t.error ? otherErrorHtml(t.error)
+      : otherRowHtml(t.next, n=>n.toLowerCase().includes('tonic'))
+        + `<div class="glyph-after">After ${escapeHtml(t.current.name)}</div>`;
+    html += otherCardHtml('Tonics', 'next', body);
+  }
+  return html;
 }
 function copperToParts(copper){
   copper = Math.round(copper||0);
@@ -1313,7 +1343,7 @@ function render(){
     sidebarHtml += slotCard('long', 'Uncommon slot', longRanked);
     sidebarHtml += `</div>`;
   }
-  sidebarHtml += glyphSectionHtml();
+  sidebarHtml += otherItemsHtml();
 
   let mainHtml = `<div class="tabs">
     <button class="tab-btn ${activeTab==='list'?'active':''}" onclick="switchTab('list')">List</button>
@@ -1587,6 +1617,7 @@ async function refreshData(){
   await loadSets();
   await loadSkinIds();
   await loadGlyphRotation();
+  await loadTonicRotation();
   render();
   loadGlyphNames(); // fire-and-forget id sanity check
   // Exposed on window so headless callers (generate-readme.js) can await
