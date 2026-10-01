@@ -510,13 +510,10 @@ function otherErrorHtml(msg){
 // each chest takes the next entry from each. Every 6th Orichalcum chest swaps its wood
 // node for a rack/flaxseed (seen twice so far, so treated as tentative).
 function nodeLabel(kind, name){
-  if(kind==='ore') return (name==='Iron'?'Iron Ore':name)+' Mining Node';
-  if(kind==='wood') return name+' Wood Logging Node';
-  return name+' Harvesting Node';
+  return (kind==='ore' && name==='Iron') ? 'Iron Ore' : name;
 }
 function slotLabel(name){
-  if(name==='Flaxseed') return 'Flaxseed Harvesting Node';
-  return 'Advanced '+name;
+  return name.replace(/ Rack$/,'');
 }
 function predictNodeChests(){
   const r = nodeRotation;
@@ -554,7 +551,7 @@ function nodeCardHtml(){
   const body = p.error ? otherErrorHtml(p.error)
     : p.chests.map((c,i)=>`<div class="glyph-row" style="display:block;">
         ${c.special?'<div class="glyph-title">No-wood variant (tentative)</div>':''}
-        ${c.items.map(n=>otherRowHtml({name:n, id:(nodeRotation.ids||{})[n]}, a=>a.toLowerCase().includes(n.replace(/^Advanced /,'').split(' ')[0].toLowerCase()))).join('')}
+        ${c.items.map(n=>otherRowHtml({name:n, id:(nodeRotation.ids||{})[n]}, a=>a.toLowerCase().includes(n.split(' ')[0].toLowerCase()))).join('')}
       </div>`).join('') + `<div class="glyph-after">After ${escapeHtml(p.asOf)}</div>`;
   return otherCardHtml('Nodes', 'next', body);
 }
