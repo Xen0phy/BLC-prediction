@@ -1495,7 +1495,7 @@ function render(){
     mainHtml += `<table class="roster"><colgroup>
       <col style="width:5%"><col style="width:18%"><col style="width:8%"><col style="width:9%"><col style="width:10%"><col style="width:10%"><col style="width:12%"><col style="width:14%"><col style="width:14%">
     </colgroup><thead><tr>
-      <th class="check-col"><button class="small" onclick="resetSort()" ${sortKey?'':'disabled'} title="Reset to default order" aria-label="Reset to default order">&#8634;</button></th>${sortTh('name','Set')}${sortTh('type','Type')}${sortTh('count','Appearances','num')}${sortTh('last','Last seen','num')}${sortTh('next','Est. next','num')}${sortTh('likelihood','Likelihood')}<th>Price (${sortOpt('priceBuy','Buy')} / ${sortOpt('priceSell','Sell')})</th><th>Avg (${sortOpt('avgBuy','Buy')} / ${sortOpt('avgSell','Sell')})</th>
+      <th class="check-col"><button class="small" onclick="resetSort()" ${sortKey?'':'disabled'} title="Reset to default order" aria-label="Reset to default order">&#8634;</button></th>${sortTh('name','Set')}${sortTh('type','Type')}${sortTh('count','Count','num')}${sortTh('last','Last seen','num')}${sortTh('next','Est. next','num')}${sortTh('likelihood','Likelihood')}<th>Price (${sortOpt('priceBuy','Buy')} / ${sortOpt('priceSell','Sell')})</th><th>Avg (${sortOpt('avgBuy','Buy')} / ${sortOpt('avgSell','Sell')})</th>
     </tr></thead><tbody>`;
     // One row builder for both groups. Retired sets have no prediction, so
     // their vintage tag takes the Est. next + Likelihood cells.
