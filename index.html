@@ -53,17 +53,22 @@
   .masthead h1{font-family:var(--font-display);font-size:var(--fs-7);font-weight:600;margin:0;color:var(--gold);}
   .masthead p{margin:4px 0 0;font-size:var(--fs-4);color:var(--cream-dim);}
 
+  .top-bars{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:28px;}
+  .top-bars .ref-bar{flex:1 1 460px;margin-bottom:0;align-content:flex-start;}
   .ref-bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 14px;margin-bottom:28px;font-size:var(--fs-3);}
   .ref-bar .field{display:flex;align-items:center;gap:6px;}
   .ref-bar label{color:var(--cream-dim);}
   .ref-bar input{background:var(--panel2);border:1px solid var(--line);color:var(--cream);border-radius:4px;padding:5px 8px;font-size:var(--fs-3);}
-  .ref-bar .ref-date-value{background:var(--panel2);border:1px solid var(--line);color:var(--cream);border-radius:4px;padding:5px 10px;font-size:var(--fs-3);font-family:var(--font-num);}
+  .ref-bar .next-update-field{flex-direction:column;align-items:flex-start;gap:4px;margin-right:6px;}
+  .ref-bar .next-update-field label{font-size:var(--fs-2);text-transform:uppercase;letter-spacing:1.5px;font-family:var(--font-num);}
+  .ref-bar .ref-date-value{font-family:var(--font-num);font-size:var(--fs-8);color:var(--gold);line-height:1;}
   .ref-bar .note{color:var(--cream-dim);font-family:var(--font-num);}
 
   h2{font-family:var(--font-display);font-weight:600;font-size:var(--fs-6);color:var(--gold);margin:0 0 12px;}
   h3{font-family:var(--font-display);font-weight:600;font-size:var(--fs-5);color:var(--gold);margin:0 0 10px;}
 
-  .tabs{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--line);}
+  .tab-actions{margin-left:auto;display:flex;gap:8px;align-self:center;padding-bottom:6px;}
+  .tabs{flex-wrap:wrap;display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--line);}
   .tab-btn{background:none;border:none;border-bottom:3px solid transparent;color:var(--cream-dim);padding:10px 18px 12px;font-size:var(--fs-5);font-family:var(--font-display);cursor:pointer;border-radius:6px 6px 0 0;transition:color .15s ease,background-color .15s ease;}
   .tab-btn:hover{color:var(--cream);background:var(--panel2);}
   .tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);background:var(--panel);font-weight:600;}
@@ -203,8 +208,9 @@
   .coin .s{color:#c9c9c9;}
   .coin .c{color:#c9793f;}
   .coin.dim{color:var(--cream-dim);}
-  td.price{font-family:var(--font-num);font-size:var(--fs-3);line-height:1.5;}
-  td.price .lbl{color:var(--cream-dim);font-size:var(--fs-1);text-transform:uppercase;letter-spacing:0.4px;margin-right:4px;}
+  td.price,.price-cell{font-family:var(--font-num);font-size:var(--fs-3);line-height:1.5;}
+  .price-cell{margin-top:4px;}
+  td.price .lbl,.price-cell .lbl{color:var(--cream-dim);font-size:var(--fs-1);text-transform:uppercase;letter-spacing:0.4px;margin-right:4px;}
   .price-summary{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;margin-bottom:14px;font-size:var(--fs-3);}
   .price-summary-grid{display:grid;grid-template-columns:1fr 1fr 2fr;gap:20px;}
   @media (max-width:640px){.price-summary-grid{grid-template-columns:1fr;gap:12px;}}
@@ -240,11 +246,19 @@
   .owned-frac{font-family:var(--font-num);font-size:var(--fs-2);color:var(--cream-dim);margin-left:6px;padding:2px 6px;border:1px solid var(--line);border-radius:3px;white-space:nowrap;background:var(--panel2);}
   .owned-frac.owned-complete{color:var(--long);border-color:var(--long);background:var(--status-ok-bg);}
   .owned-frac.owned-partial{color:var(--gold);border-color:var(--gold);}
-  .account-bar input[type=password]{background:var(--panel2);border:1px solid var(--line);color:var(--cream);border-radius:4px;padding:5px 8px;font-size:var(--fs-3);min-width:260px;}
+  .account-bar input[type=password]{background:var(--panel2);border:1px solid var(--line);color:var(--cream);border-radius:4px;padding:5px 8px;font-size:var(--fs-3);min-width:300px;}
   .account-bar .note{max-width:640px;}
+  .account-bar .note b{color:var(--cream);font-weight:500;}
 
   button{font-family:var(--font-body);font-size:var(--fs-3);cursor:pointer;border-radius:4px;border:1px solid var(--line);background:var(--panel2);color:var(--cream-dim);padding:5px 10px;}
   button:hover{border-color:var(--gold);color:var(--cream);}
+  button:disabled{opacity:0.4;cursor:default;}
+  button:disabled:hover{border-color:var(--line);color:var(--cream-dim);}
+  table.roster th.sortable,.sort-opt{cursor:pointer;user-select:none;}
+  table.roster th.sortable:hover,.sort-opt:hover{color:var(--gold);}
+  table.roster th.sortable.active,.sort-opt.active{color:var(--gold);}
+  .sort-arrow{font-size:9px;}
+  .section-tools{display:flex;align-items:center;gap:10px;}
   button.small{padding:2px 7px;font-size:var(--fs-2);}
   button.small.danger{border-color:#a33;color:#e08a8a;}
   button.small.danger:hover{background:#3a1414;border-color:#c44;color:#f0a0a0;}
@@ -278,6 +292,8 @@ let rangeStart = null;
 let rangeEnd = null;
 let foldRetired = true;
 let listShowRetired = false;
+let sortKey = null; // null = default order (newest release first)
+let sortDir = 'asc';
 let showReleases = false;
 let skinIds = {};
 let prices = {};
@@ -671,6 +687,63 @@ function avgCellHtml(name){
 }
 // Scrolls to a set's row in the list and flashes it. Opens the retired table
 // first when the set lives there and that table is collapsed.
+function setSort(key){
+  if(sortKey===key){ sortDir = sortDir==='asc' ? 'desc' : 'asc'; }
+  else { sortKey = key; sortDir = (key==='likelihood' || key==='count') ? 'desc' : 'asc'; }
+  render();
+}
+function resetSort(){ sortKey = null; sortDir = 'asc'; render(); }
+function sortArrow(key){
+  return sortKey===key ? `<span class="sort-arrow">${sortDir==='asc'?' ▲':' ▼'}</span>` : '';
+}
+function sortTh(key, label, cls){
+  return `<th class="sortable ${cls||''} ${sortKey===key?'active':''}" onclick="setSort('${key}')">${label}${sortArrow(key)}</th>`;
+}
+function sortOpt(key, label){
+  return `<span class="sort-opt ${sortKey===key?'active':''}" onclick="setSort('${key}')">${label}${sortArrow(key)}</span>`;
+}
+// Value a row sorts by for the current key; null means "no value" and always
+// sorts last, whichever direction is active.
+function sortValue(x, key, isRetired){
+  const p=x.p, s=x.s;
+  switch(key){
+    case 'name': return s.name.toLowerCase();
+    case 'type': return p.type==='short' ? 'rare' : p.type==='long' ? 'uncommon' : 'zzz';
+    case 'count': return p.count;
+    case 'last': return p.lastDate ? p.lastDate.getTime() : null;
+    case 'next': return isRetired ? null : p.predicted.getTime();
+    case 'likelihood': return isRetired ? null : x.pct;
+    case 'priceBuy': case 'priceSell': {
+      if(pricesStatus!=='loaded') return null;
+      const pr = isEffectivelyCollected(s.name) ? prices[s.name] : effectivePrice(s.name);
+      if(!pr) return null;
+      const v = key==='priceBuy' ? pr.buy : pr.sell;
+      return v>0 ? v : null;
+    }
+    case 'avgBuy': case 'avgSell': {
+      if(pricesStatus!=='loaded') return null;
+      const a = isEffectivelyCollected(s.name) ? avgSetPrice(s.name, false) : effectiveAvg(s.name);
+      const v = key==='avgBuy' ? a.buy : a.sell;
+      return v>0 ? v : null;
+    }
+  }
+  return null;
+}
+function sortRows(rows, isRetired){
+  if(!sortKey) return rows;
+  const dir = sortDir==='asc' ? 1 : -1;
+  return rows
+    .map((x,i)=>({x, i, v:sortValue(x, sortKey, isRetired)}))
+    .sort((a,b)=>{
+      const an=a.v==null, bn=b.v==null;
+      if(an && bn) return a.i-b.i;
+      if(an) return 1;
+      if(bn) return -1;
+      const c = typeof a.v==='string' ? a.v.localeCompare(b.v) : a.v-b.v;
+      return c===0 ? a.i-b.i : c*dir;
+    })
+    .map(o=>o.x);
+}
 function jumpToSet(name){
   if(activeTab!=='list') activeTab = 'list';
   const set = sets.find(s=>s.name===name);
@@ -684,19 +757,14 @@ function jumpToSet(name){
   row.classList.add('row-flash');
 }
 function accountNoteText(){
-  if(!apiKey) return confirmedComplete.size
-    ? `Optional - connect a GW2 API key (only needs the "unlocks" permission) to keep detecting newly-finished sets. ${confirmedComplete.size} set${confirmedComplete.size!==1?'s are':' is'} already remembered as fully unlocked from a previous check, so those stay marked even without a key connected.`
-    : 'Optional - connect a GW2 API key (only needs the "unlocks" permission) to auto-detect which sets you\'ve fully unlocked, instead of checking them off by hand. Create one at account.arena.net/applications. The key is stored only in your browser and sent only to api.guildwars2.com.';
+  if(!apiKey) return 'GW2 API key only needs the "unlocks" permission.';
   if(accountStatus==='loading') return 'Fetching your unlocked skins…';
   if(accountStatus==='error') return 'Check the key has the "unlocks" permission, then try again.';
   if(accountStatus==='loaded'){
     const names = Object.keys(skinIds);
-    let fullyOwned=0, partial=0;
-    names.forEach(name=>{
-      const own = setOwnership(name);
-      if(own){ if(own.complete) fullyOwned++; else if(own.owned>0) partial++; }
-    });
-    return `${accountSkinIdSet.size} unlocked skins loaded - <b>${fullyOwned} of ${names.length} sets fully unlocked</b>, ${partial} more partially owned (look for the small fraction badge next to each set's name below). Fully-unlocked sets are checked off automatically and can't be unchecked; once a set hits 100% it's remembered permanently, so it stays marked even on visits without a key.`;
+    let fullyOwned=0;
+    names.forEach(name=>{ const own = setOwnership(name); if(own && own.complete) fullyOwned++; });
+    return `<b>${accountSkinIdSet.size}</b> skins unlocked`+`</span><span class="note"><b>${fullyOwned}/${names.length}</b> sets completed`;
   }
   return '';
 }
@@ -845,10 +913,10 @@ function slotCard(typeKey, label, ranked){
       ${top.p.count} appearance${top.p.count!==1?'s':''} so far<br>
       Last seen: <b>${top.p.lastDate?fmtDisplay(top.p.lastDate):'-'}</b><br>
       Estimated next: <b>${fmtDisplay(top.p.predicted)}</b> (${overdueText(top.p.daysDiff)})<br>
-      Set price: ${priceCellHtml(top.s.name)}
+      <div class="price-cell">${priceCellHtml(top.s.name)}</div>
     </div>
     ${runnersUp.length ? `<div class="slot-queue">
-      <div class="slot-queue-title">Next in line for this slot</div>
+      <div class="slot-queue-title">Next in line</div>
       ${runnersUp.map((x,i)=>`<div class="slot-queue-item">
         <div class="slot-queue-row"><b>${i+2}. ${escapeHtml(x.s.name)}</b><span class="q-pct">${x.pct.toFixed(1)}%</span></div>
         <div class="pct-bar-track slot-queue-bar"><div class="pct-bar-fill type-${typeKey}" style="width:${clamp(x.barPct,2,100)}%"></div></div>
@@ -972,7 +1040,7 @@ function renderFullTimeline(stats, refDate, ext, dispMin, dispMax){
       ${showReleases ? `<span class="legend-item"><span style="color:var(--cream);font-weight:700;">+</span>released</span>` : ''}
       <span class="legend-item"><span style="width:14px;height:2px;background:var(--long);display:inline-block;"></span>history</span>
       <span class="legend-item"><span style="width:14px;height:0;border-top:2px dashed var(--long);display:inline-block;"></span>to predicted</span>
-      <span class="legend-item"><span style="width:1px;height:10px;background:var(--gold);display:inline-block;"></span>reference date</span>
+      <span class="legend-item"><span style="width:1px;height:10px;background:var(--gold);display:inline-block;"></span>next update</span>
       <span class="legend-item"><span style="width:1px;height:10px;background:var(--cream-dim);display:inline-block;"></span>today</span>
     </div>
   </div>`;
@@ -1096,25 +1164,26 @@ function render(){
   let html = '';
   html += `<div id="status-msg" class="status-msg"></div>`;
 
-  html += `<div class="ref-bar">
-    <div class="field"><label>Reference date</label>
+  html += `<div class="top-bars">
+  <div class="ref-bar">
+    <div class="field next-update-field"><label>Next update</label>
       <span class="ref-date-value">${nextUpdateDate? fmtDisplay(toUTC(nextUpdateDate)) : fmtDisplay(todayUTC())}</span>
     </div>
     <button class="small" id="fetch-shaman-btn" onclick="fetchNextUpdateFromShaman()" ${shamanStatus==='loading'?'disabled':''}>${shamanStatus==='loading'?'Fetching…':'Refresh from thatshaman.com'}</button>
-    <button class="small" onclick="refreshData()">Refresh data.json</button>
-    <button class="small" id="fetch-prices-btn" onclick="loadPrices()" ${pricesStatus==='loading'?'disabled':''}>${pricesStatus==='loading'?'Fetching prices…':(pricesStatus==='loaded'?'Refresh prices':'Load live prices')}</button>
     <span class="note">${shamanStatus==='error' ? "Could not reach thatshaman.com - falling back to today's date. Try refreshing." : (nextUpdateDate? 'Next update date, auto-fetched from thatshaman.com.' : 'Using today - thatshaman.com has no upcoming date posted yet.')}</span>
   </div>`;
 
   html += `<div class="ref-bar account-bar">
-    <div class="field"><label>GW2 API key</label>
-      <input type="password" id="api-key-input" placeholder="Paste API key…" value="${apiKey?escapeAttr(apiKey):''}">
+    <div class="field">
+      <input type="password" id="api-key-input" placeholder="Paste GW2 API key here (optional)" value="${apiKey?escapeAttr(apiKey):''}">
     </div>
     <button class="small" onclick="connectAccount()" ${accountStatus==='loading'?'disabled':''}>${accountStatus==='loading'?'Loading…':(accountStatus==='loaded'?'Refresh account skins':'Connect')}</button>
     ${apiKey ? `<button class="small" onclick="disconnectAccount()">Disconnect</button>` : ''}
     <button class="small danger" onclick="resetStoredData()" title="Clears saved API key, checked-off sets, confirmed-complete sets, and cached reference date">Reset stored data</button>
+    ${pricesUpdatedAt ? `<span class="note">Last updated <b>${pricesUpdatedAt.toLocaleTimeString()}</b></span>` : ''}
     <span class="note">${accountNoteText()}</span>
   </div>`;
+  html += `</div>`;
   if(accountStatus==='error'){
     html += `<div class="status-msg show status-err" style="position:static;margin-bottom:14px;">Could not load account skins (${escapeHtml(accountErrorMsg)}).</div>`;
   }
@@ -1140,6 +1209,10 @@ function render(){
   let mainHtml = `<div class="tabs">
     <button class="tab-btn ${activeTab==='list'?'active':''}" onclick="switchTab('list')">List</button>
     <button class="tab-btn ${activeTab==='timeline'?'active':''}" onclick="switchTab('timeline')">Timeline</button>
+    <div class="tab-actions">
+      <button class="small" onclick="refreshData()">Refresh data.json</button>
+      <button class="small" id="fetch-prices-btn" onclick="loadPrices()" ${pricesStatus==='loading'?'disabled':''}>${pricesStatus==='loading'?'Fetching prices…':(pricesStatus==='loaded'?'Refresh prices':'Load live prices')}</button>
+    </div>
   </div>`;
 
   if(activeTab==='timeline'){
@@ -1193,9 +1266,6 @@ function render(){
         if(a.buy>0 && (!cheapestAvgBuy || a.buy<cheapestAvgBuy.val)) cheapestAvgBuy={name:s.name, val:a.buy};
         if(a.sell>0 && (!cheapestAvgSell || a.sell<cheapestAvgSell.val)) cheapestAvgSell={name:s.name, val:a.sell};
       });
-      const effectiveCollectedCount = sets.filter(s=>isEffectivelyCollected(s.name)).length;
-      const collectedNote = effectiveCollectedCount ? ` - ${effectiveCollectedCount} collected set${effectiveCollectedCount!==1?'s':''} excluded` : '';
-      const remainingNote = accountStatus==='loaded' ? ', and only the skins you don\'t already own within each partially-completed set' : '';
       mainHtml += `<div class="price-summary">
         <div class="price-summary-grid">
           <div class="ps-col">
@@ -1215,15 +1285,14 @@ function render(){
             <div class="ps-line"><span class="ps-lbl">Cheapest avg sell</span>${cheapestAvgSell?`<b class="jump" onclick="jumpToSet('${escapeAttr(cheapestAvgSell.name)}')" title="Jump to this set in the list">${escapeHtml(cheapestAvgSell.name)}</b> ${coinHtml(cheapestAvgSell.val)}`:'-'}</div>
           </div>
         </div>
-        <span class="note">live from the GW2 API${pricesUpdatedAt?', updated '+pricesUpdatedAt.toLocaleTimeString():''} - sums are buy-order and sell-listing totals across all skins in each set${collectedNote}${remainingNote}; cheapest buy/sell are the single lowest-priced uncollected sets, and cheapest avg buy/sell the lowest average price per remaining skin. Click a set name there to jump to its row. Check off sets below as you collect them to update these.</span>
       </div>`;
     }
 
-    mainHtml += `<div class="section-head"><h2>Full roster</h2><span class="hint">newest release date first - click a name for details</span></div>`;
+    mainHtml += `<div class="section-head"><h2>Full roster</h2><span class="section-tools"><span class="hint">${sortKey?'':'newest release date first - '}click a header to sort, a name for details</span><button class="small" onclick="resetSort()" ${sortKey?'':'disabled'} title="Reset to default order" aria-label="Reset to default order">&#8634;</button></span></div>`;
     mainHtml += `<table class="roster"><colgroup>
       <col style="width:4%"><col style="width:19%"><col style="width:8%"><col style="width:9%"><col style="width:10%"><col style="width:10%"><col style="width:12%"><col style="width:14%"><col style="width:14%">
     </colgroup><thead><tr>
-      <th class="check-col"></th><th>Set</th><th>Type</th><th class="num">Appearances</th><th class="num">Last seen</th><th class="num">Est. next</th><th>Likelihood</th><th>Price (buy / sell)</th><th>Avg</th>
+      <th class="check-col"></th>${sortTh('name','Set')}${sortTh('type','Type')}${sortTh('count','Appearances','num')}${sortTh('last','Last seen','num')}${sortTh('next','Est. next','num')}${sortTh('likelihood','Likelihood')}<th>Price (${sortOpt('priceBuy','Buy')} / ${sortOpt('priceSell','Sell')})</th><th>Avg (${sortOpt('avgBuy','Buy')} / ${sortOpt('avgSell','Sell')})</th>
     </tr></thead><tbody>`;
     // One row builder for both groups. Retired sets have no prediction, so
     // their vintage tag takes the Est. next + Likelihood cells.
@@ -1250,7 +1319,7 @@ function render(){
       ${expandedName===s.name ? `<tr><td colspan="9">${renderDetailPanel(s,p)}</td></tr>` : ''}
       `;
     };
-    chronological.slice().reverse().forEach(x=>{ mainHtml += rosterRow(x, false); });
+    sortRows(chronological.slice().reverse(), false).forEach(x=>{ mainHtml += rosterRow(x, false); });
 
     if(retiredCount){
       const vintageCount = sets.filter(s=>s.vintage).length;
@@ -1259,9 +1328,9 @@ function render(){
         <span class="hint">${listShowRetired?`${vintageCount?`${vintageCount} have gone vintage`:''}`:'click to show'}</span>
       </td></tr>`;
       if(listShowRetired){
-        sets.filter(s=>s.retired)
+        sortRows(sets.filter(s=>s.retired)
           .map(s=>({s, p:predictSet(s, stats, refDate)}))
-          .sort((a,b)=>toUTC(b.s.added)-toUTC(a.s.added))
+          .sort((a,b)=>toUTC(b.s.added)-toUTC(a.s.added)), true)
           .forEach(x=>{ mainHtml += rosterRow(x, true); });
       }
     }
