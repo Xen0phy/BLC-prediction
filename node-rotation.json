@@ -1,0 +1,59 @@
+{
+  "asOf": "Shaded Threads (live from 29 Sep 2026)",
+  "last": {
+    "ore": "Platinum",
+    "wood": "Hard",
+    "slot": "Leather Rack"
+  },
+  "oreOrder": [
+    "Orichalcum",
+    "Mithril",
+    "Iron",
+    "Platinum"
+  ],
+  "woodOrder": [
+    "Hard",
+    "Elder",
+    "Ancient"
+  ],
+  "slotOrder": [
+    "Leather Rack",
+    "Flaxseed",
+    "Cloth Rack"
+  ],
+  "plants": {
+    "Orichalcum": [
+      "Lotus",
+      "Ghost Pepper"
+    ],
+    "Mithril": [
+      "Orrian Truffle"
+    ],
+    "Iron": [
+      "Omnomberry"
+    ],
+    "Platinum": [
+      "Snow Truffle"
+    ]
+  },
+  "orichalcumSinceSpecial": 1,
+  "specialEvery": 6,
+  "count": 1,
+  "ids": {
+    "Platinum Mining Node": 68097,
+    "Snow Truffle Harvesting Node": 68092,
+    "Advanced Cloth Rack": 81853,
+    "Advanced Leather Rack": 81852,
+    "Ancient Wood Logging Node": 68091,
+    "Elder Wood Logging Node": 68090,
+    "Hard Wood Logging Node": 79085,
+    "Flaxseed Harvesting Node": 79063,
+    "Ghost Pepper Harvesting Node": 68093,
+    "Iron Ore Mining Node": 79260,
+    "Lotus Harvesting Node": 68096,
+    "Mithril Mining Node": 68098,
+    "Omnomberry Harvesting Node": 68089,
+    "Orichalcum Mining Node": 68094,
+    "Orrian Truffle Harvesting Node": 68095
+  }
+}

@@ -323,6 +323,7 @@ let showReleases = false;
 let skinIds = {};
 let tonicRotation = null; // from tonic-rotation.json: {current, order:[{name,id}]}
 let glyphRotation = null; // from glyph-rotation.json: {current, pairs:[{name, items:[{name,id}]}]}
+let nodeRotation = null; // from node-rotation.json: stream state for the Rare node/rack predictions
 let otherPrices = {}; // glyph + tonic item id -> {buy, sell}
 let otherItemNames = {}; // item id -> API name, used to sanity-check the configured ids
 let prices = {};
@@ -424,10 +425,18 @@ async function loadTonicRotation(){
     tonicRotation = await res.json();
   }catch(e){ tonicRotation = null; }
 }
+async function loadNodeRotation(){
+  try{
+    const res = await fetch('./node-rotation.json', {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    nodeRotation = await res.json();
+  }catch(e){ nodeRotation = null; }
+}
 function otherItemIds(){
   const ids = [];
   ((glyphRotation && glyphRotation.pairs) || []).forEach(p=>(p.items||[]).forEach(it=>{ if(it.id) ids.push(it.id); }));
   ((tonicRotation && tonicRotation.order) || []).forEach(it=>{ if(it.id) ids.push(it.id); });
+  Object.values((nodeRotation && nodeRotation.ids) || {}).forEach(id=>{ if(id) ids.push(id); });
   return ids;
 }
 // Checks the configured glyph/tonic ids against the API's item names so a wrong id shows
@@ -497,9 +506,61 @@ function otherCardHtml(title, hint, bodyHtml){
 function otherErrorHtml(msg){
   return `<div style="color:var(--cream-dim);font-size:var(--fs-3);padding:6px 0;">${escapeHtml(msg)}</div>`;
 }
+// Rare node/rack rotation. Four independent cycles (ore, wood, rack/flaxseed, plants);
+// each chest takes the next entry from each. Every 6th Orichalcum chest swaps its wood
+// node for a rack/flaxseed (seen twice so far, so treated as tentative).
+function nodeLabel(kind, name){
+  if(kind==='ore') return (name==='Iron'?'Iron Ore':name)+' Mining Node';
+  if(kind==='wood') return name+' Wood Logging Node';
+  return name+' Harvesting Node';
+}
+function slotLabel(name){
+  if(name==='Flaxseed') return 'Flaxseed Harvesting Node';
+  return 'Advanced '+name;
+}
+function predictNodeChests(){
+  const r = nodeRotation;
+  if(!r || !r.last) return null;
+  let oi = r.oreOrder.indexOf(r.last.ore);
+  let wi = r.woodOrder.indexOf(r.last.wood);
+  let si = r.slotOrder.indexOf(r.last.slot);
+  if(oi<0||wi<0||si<0) return {error:'node-rotation.json "last" has an entry not found in its order lists'};
+  let since = r.orichalcumSinceSpecial||0;
+  const out = [];
+  for(let n=0;n<(r.count||1);n++){
+    oi = (oi+1)%r.oreOrder.length;
+    const ore = r.oreOrder[oi];
+    const items = [nodeLabel('ore',ore)].concat((r.plants[ore]||[]).map(p=>nodeLabel('plant',p)));
+    let special = false;
+    if(ore==='Orichalcum'){
+      since++;
+      if(since>=r.specialEvery){
+        special = true; since = 0;
+        si = (si+1)%r.slotOrder.length; items.push(slotLabel(r.slotOrder[si]));
+      }else{
+        wi = (wi+1)%r.woodOrder.length; items.push(nodeLabel('wood',r.woodOrder[wi]));
+      }
+    }else{
+      si = (si+1)%r.slotOrder.length; items.push(slotLabel(r.slotOrder[si]));
+      wi = (wi+1)%r.woodOrder.length; items.push(nodeLabel('wood',r.woodOrder[wi]));
+    }
+    out.push({ore, items, special});
+  }
+  return {chests: out, asOf: r.asOf};
+}
+function nodeCardHtml(){
+  const p = predictNodeChests();
+  if(!p) return '';
+  const body = p.error ? otherErrorHtml(p.error)
+    : p.chests.map((c,i)=>`<div class="glyph-row" style="display:block;">
+        ${c.special?'<div class="glyph-title">No-wood variant (tentative)</div>':''}
+        ${c.items.map(n=>otherRowHtml({name:n, id:(nodeRotation.ids||{})[n]}, a=>a.toLowerCase().includes(n.replace(/^Advanced /,'').split(' ')[0].toLowerCase()))).join('')}
+      </div>`).join('') + `<div class="glyph-after">After ${escapeHtml(p.asOf)}</div>`;
+  return otherCardHtml('Nodes', 'next', body);
+}
 function otherItemsHtml(){
-  const g = nextGlyphPair(), t = nextTonic();
-  if(!g && !t) return '';
+  const g = nextGlyphPair(), t = nextTonic(), nodeHtml = nodeCardHtml();
+  if(!g && !t && !nodeHtml) return '';
   let html = `<h2 class="sidebar-section">Other items</h2>`;
   if(g){
     const body = g.error ? otherErrorHtml(g.error)
@@ -513,6 +574,7 @@ function otherItemsHtml(){
         + `<div class="glyph-after">After ${escapeHtml(t.current.name)}</div>`;
     html += otherCardHtml('Tonics', 'next', body);
   }
+  html += nodeHtml;
   return html;
 }
 function copperToParts(copper){
@@ -1618,6 +1680,7 @@ async function refreshData(){
   await loadSkinIds();
   await loadGlyphRotation();
   await loadTonicRotation();
+  await loadNodeRotation();
   render();
   loadGlyphNames(); // fire-and-forget id sanity check
   // Exposed on window so headless callers (generate-readme.js) can await
