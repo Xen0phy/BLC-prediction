@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Black Lion Chest Predictor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,9 +45,6 @@
     .layout-grid{grid-template-columns:320px 1fr;}
     .sidebar{position:sticky;top:20px;}
   }
-  @media (max-width:979px){
-    .layout-grid[data-tab="timeline"] .sidebar{display:none;}
-  }
   .sidebar .predict-grid{grid-template-columns:1fr;}
 
   .masthead{display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:20px;}
@@ -69,7 +67,7 @@
 
   .tab-actions{margin-left:auto;display:flex;gap:8px;align-self:center;padding-bottom:6px;}
   .tabs{flex-wrap:wrap;display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--line);}
-  .tab-btn{background:none;border:none;border-bottom:3px solid transparent;color:var(--cream-dim);padding:10px 18px 12px;font-size:var(--fs-5);font-family:var(--font-display);cursor:pointer;border-radius:6px 6px 0 0;transition:color .15s ease,background-color .15s ease;}
+  .tab-btn{background:none;border:1px solid var(--line);border-bottom:3px solid transparent;color:var(--cream-dim);min-width:130px;padding:10px 18px 12px;font-size:var(--fs-5);font-family:var(--font-display);text-align:center;cursor:pointer;border-radius:6px 6px 0 0;transition:color .15s ease,background-color .15s ease;}
   .tab-btn:hover{color:var(--cream);background:var(--panel2);}
   .tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);background:var(--panel);font-weight:600;}
 
@@ -236,6 +234,9 @@
   .ps-col-cheapest .jump:hover{color:var(--gold);text-decoration:underline;}
   @keyframes rowflash{0%{background:rgba(201,151,63,0.55);}100%{background:transparent;}}
   tr.row-flash td{animation:rowflash 2.2s ease-out;}
+  .ps-mode{gap:8px;}
+  .ps-mode .ps-opt{color:var(--cream-dim);transition:color .15s ease;}
+  .ps-mode .ps-opt.on{color:var(--gold);}
   .ps-col-cheapest b{color:var(--cream);font-weight:500;}
   .price-summary .note{color:var(--cream-dim);font-family:var(--font-body);display:block;margin-top:10px;padding-top:9px;border-top:1px solid var(--line-soft);}
   .price-incomplete{color:var(--unknown);font-size:var(--fs-1);margin-left:4px;}
@@ -285,12 +286,89 @@
   button.small.danger{border-color:#a33;color:#e08a8a;}
   button.small.danger:hover{background:#3a1414;border-color:#c44;color:#f0a0a0;}
 
-  .footnote{font-size:var(--fs-2);color:var(--cream-dim);line-height:1.6;margin-top:6px;}
+  .wiki-link{color:inherit;text-decoration:none;cursor:pointer;}
+  .wiki-link:hover{color:var(--gold);text-decoration:underline;}
+  .slot-avg{margin-top:14px;padding-top:10px;border-top:1px solid var(--line-soft);font-size:var(--fs-2);color:var(--cream-dim);font-family:var(--font-num);}
   .status-msg{font-size:var(--fs-3);padding:8px 10px;border-radius:4px;margin-bottom:14px;display:none;}
   .status-msg.show{display:block;}
   .status-ok{background:var(--status-ok-bg);color:var(--long);}
   .status-err{background:var(--status-err-bg);color:var(--short);}
   .loading{padding:60px 0;text-align:center;color:var(--cream-dim);font-size:var(--fs-4);}
+
+  html{-webkit-text-size-adjust:100%;}
+  .sort-mobile{display:none;}
+  .detail-mobile-only{display:none;}
+  html.m .detail-mobile-only{display:flex;}
+  html.m{--fs-1:11px;--fs-2:12px;--fs-3:13px;--fs-4:14px;--fs-5:16px;--fs-6:18px;--fs-7:22px;--fs-8:26px;}
+  html.m .wrap{padding:16px 12px 40px;max-width:560px;}
+  html.m .layout-grid{gap:22px;grid-template-columns:minmax(0,1fr);}
+  html.m .main-col,html.m .sidebar{min-width:0;}
+  html.m button{padding:8px 12px;}
+  html.m button.small{padding:8px 11px;}
+  html.m .top-bars{gap:10px;margin-bottom:18px;}
+  html.m .top-bars .ref-bar{flex:1 1 100%;}
+  html.m .ref-bar{padding:10px 12px;}
+  html.m .ref-bar input,html.m .account-bar input[type=password],html.m .sort-select{font-size:16px;padding:8px 10px;}
+  html.m .account-bar .field{flex:1 1 100%;}
+  html.m .account-bar input[type=password]{min-width:0;width:100%;}
+  html.m .tabs{margin-bottom:16px;}
+  html.m .tab-btn{flex:1 1 0;min-width:0;padding:10px 12px 12px;}
+  html.m .tab-actions{margin-left:0;width:100%;padding-bottom:10px;flex-wrap:wrap;}
+  html.m .predict-card{padding:14px 16px;}
+  html.m .section-head{flex-direction:column;align-items:stretch;gap:14px;margin-bottom:6px;}
+  html.m .toggle-group{gap:12px 22px;}
+  html.m .merge-label{font-size:var(--fs-4);}
+  html.m .sort-mobile{display:flex;gap:8px;}
+  html.m .sort-select{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--cream);border-radius:4px;font-family:var(--font-body);}
+
+    /* roster table becomes one card per set */
+  html.m table.roster,html.m table.roster tbody{display:block;width:100%;}
+  html.m table.roster colgroup,html.m table.roster thead{display:none;}
+  html.m table.roster tr{display:grid;grid-template-columns:30px 1fr 1fr 1fr;column-gap:10px;row-gap:8px;align-items:start;padding:12px 2px;border-bottom:1px solid var(--line-soft);}
+  html.m table.roster td{display:block;padding:0;border:none;min-width:0;}
+  html.m table.roster tr:hover td{background:none;}
+  html.m table.roster td.c-last,html.m table.roster td.c-next{display:none;}
+  html.m table.roster td.c-price[data-label="Avg"]::before{content:"Avg";display:inline;margin-right:8px;font-size:var(--fs-1);text-transform:uppercase;letter-spacing:0.5px;color:var(--cream-dim);font-family:var(--font-body);}
+  html.m table.roster td.check-col{grid-column:1;grid-row:1;width:auto;padding:0;text-align:left;}
+  html.m input.collected-check{width:20px;height:20px;}
+  html.m table.roster td.num{font-size:var(--fs-3);white-space:nowrap;}
+  html.m table.roster td.check-col{align-self:center;}
+  html.m table.roster td.c-type{align-self:center;}
+  html.m table.roster td.name{grid-column:2 / span 2;grid-row:1;font-size:var(--fs-5);}
+  html.m table.roster td.c-type{grid-column:4;grid-row:1;justify-self:end;}
+
+  html.m table.roster td.c-vintage{grid-column:2 / -1;grid-row:2;white-space:normal;}
+  html.m table.roster td.c-like{grid-column:2 / -1;grid-row:2;}
+  html.m table.roster td.c-price{grid-column:2 / -1;grid-row:3;}
+  html.m td.c-price br{display:none;}
+  html.m td.c-price .coin{margin-right:14px;}
+  html.m td.c-price .lbl{font-size:var(--fs-1);}
+  html.m table.roster tr.detail-tr{display:block;padding:0;border:none;}
+  html.m table.roster tr.detail-tr td{display:block;}
+  html.m .detail-panel{margin:0 0 12px;padding:12px;}
+  html.m .detail-panel .detail-row{gap:6px 16px;}
+  html.m table.roster tr.retired-divider{display:block;padding:0;}
+  html.m tr.retired-divider td{padding:20px 2px 8px;}
+  html.m tr.retired-divider .hint{display:block;margin:4px 0 0 0;}
+
+    /* timeline */
+  html.m .timeline-controls{padding:12px;}
+  html.m .timeline-block{padding:12px 10px 16px;}
+  html.m .timeline-row,html.m .timeline-year-header,html.m .timeline-header,html.m .timeline-divider{grid-template-columns:96px 1fr;gap:8px;}
+  html.m .timeline-track{min-width:360px;}
+  html.m .timeline-header .legend{gap:4px 14px;}
+  html.m .range-slider-wrap input[type=range]::-webkit-slider-thumb{width:16px;height:30px;margin-top:-13px;}
+  html.m .range-slider-wrap input[type=range]::-moz-range-thumb{width:16px;height:30px;}
+  html.m .range-slider-wrap input[type=range]{height:30px;}
+  html.m .range-slider-wrap{height:34px;}
+  html.m .sidebar{position:static;}
+  html.m .predict-grid{grid-template-columns:1fr;}
+  html.m .price-summary-grid{flex-direction:column;flex-wrap:nowrap;gap:12px;}
+  html.m .ps-col{flex:none;border-left:none;padding-left:0;}
+  .view-row{display:flex;justify-content:flex-end;margin-bottom:12px;}
+  .view-row .merge-toggle{gap:8px;}
+  .view-opt{font-size:var(--fs-3);color:var(--cream-dim);transition:color .15s ease;}
+  .view-opt.on{color:var(--gold);}
 </style>
 </head>
 <body>
@@ -316,6 +394,22 @@ let foldRetired = true;
 let listShowRetired = false;
 let mergeRetired = false;
 let hideCompleted = false;
+const VIEW_KEY = 'blc-view';
+let viewMode = (()=>{ try{ const v=localStorage.getItem(VIEW_KEY); if(v==='pc'||v==='mobile') return v; }catch(e){} return window.innerWidth<=640 ? 'mobile' : 'pc'; })();
+function applyViewMode(){
+  document.documentElement.classList.toggle('m', viewMode==='mobile');
+  const mv = document.querySelector('meta[name="viewport"]');
+  if(mv) mv.setAttribute('content', viewMode==='pc' ? 'width=1100' : 'width=device-width, initial-scale=1');
+}
+function toggleViewMode(){
+  viewMode = viewMode==='pc' ? 'mobile' : 'pc';
+  if(viewMode==='pc' && sortKey==='count') sortKey = null;
+  try{ localStorage.setItem(VIEW_KEY, viewMode); }catch(e){}
+  applyViewMode();
+  render();
+}
+applyViewMode();
+let priceMode = 'total'; // 'total' or 'avg': drives the Cheapest summary column and the table price column
 let sortKey = null; // null = default order (newest release first)
 let sortDir = 'asc';
 let showReleases = false;
@@ -886,6 +980,20 @@ function setSort(key){
   render();
 }
 function toggleMerge(){ mergeRetired = !mergeRetired; render(); }
+function togglePriceMode(){
+  priceMode = priceMode==='total' ? 'avg' : 'total';
+  const map = priceMode==='avg'
+    ? {priceBuy:'avgBuy', priceSell:'avgSell'}
+    : {avgBuy:'priceBuy', avgSell:'priceSell'};
+  if(map[sortKey]) sortKey = map[sortKey];
+  render();
+}
+function setSortFromSelect(k){
+  if(!k){ resetSort(); return; }
+  sortKey = k; sortDir = (k==='likelihood' || k==='count') ? 'desc' : 'asc';
+  render();
+}
+function flipSortDir(){ sortDir = sortDir==='asc' ? 'desc' : 'asc'; render(); }
 function toggleHideCompleted(){ hideCompleted = !hideCompleted; render(); }
 function resetSort(){ sortKey = null; sortDir = 'asc'; render(); }
 function sortArrow(key){
@@ -1091,7 +1199,13 @@ function typeTag(type){
   return '<span class="type-tag type-unknown">unknown</span>';
 }
 
-function slotCard(typeKey, label, ranked){
+function wikiUrl(name){
+  return 'https://wiki.guildwars2.com/wiki/' + encodeURIComponent(String(name).replace(/ /g,'_') + '_weapon_skins');
+}
+function wikiLink(name){
+  return `<a class="wiki-link" href="${wikiUrl(name)}" target="_blank" rel="noopener" title="Open on the GW2 wiki">${escapeHtml(name)}</a>`;
+}
+function slotCard(typeKey, label, ranked, avgGap){
   if(ranked.length===0){
     return `<div class="predict-card slot-${typeKey}">
       <div style="color:var(--cream-dim);font-size:var(--fs-4);padding:4px 0;">No active ${typeKey} sets in data.json.</div>
@@ -1101,7 +1215,7 @@ function slotCard(typeKey, label, ranked){
   const runnersUp = ranked.slice(1,3);
   return `<div class="predict-card slot-${typeKey}">
     <div class="predict-head">
-      <div class="predict-name">${escapeHtml(top.s.name)}</div>
+      <div class="predict-name">${wikiLink(top.s.name)}</div>
       <div class="predict-pct">${top.pct.toFixed(1)}<span> %</span></div>
     </div>
     <div class="pct-bar-track" style="margin:8px 0 2px;"><div class="pct-bar-fill type-${typeKey}" style="width:${clamp(top.barPct,2,100)}%"></div></div>
@@ -1114,10 +1228,11 @@ function slotCard(typeKey, label, ranked){
     ${runnersUp.length ? `<div class="slot-queue">
       <div class="slot-queue-title">Next in line</div>
       ${runnersUp.map((x,i)=>`<div class="slot-queue-item">
-        <div class="slot-queue-row"><b>${i+2}. ${escapeHtml(x.s.name)}</b><span class="q-pct">${x.pct.toFixed(1)}%</span></div>
+        <div class="slot-queue-row"><b>${i+2}. ${wikiLink(x.s.name)}</b><span class="q-pct">${x.pct.toFixed(1)}%</span></div>
         <div class="pct-bar-track slot-queue-bar"><div class="pct-bar-fill type-${typeKey}" style="width:${clamp(x.barPct,2,100)}%"></div></div>
       </div>`).join('')}
     </div>` : ''}
+    <div class="slot-avg" title="Recomputed live from this slot's actual gaps between appearances">${label} average: ~${Math.round(avgGap)}d</div>
   </div>`;
 }
 function vintageTag(vintageStr){
@@ -1336,7 +1451,13 @@ function renderDetailPanel(s, p){
     ${own.complete ? '' : `<div class="chip-list skin-chip-list">${missingChips}</div>`}`;
   }
 
+  const statsRow = p ? `<div class="detail-row detail-mobile-only">
+      <span>Appearances: <b>${p.count}</b></span>
+      <span>Last seen: <b>${p.lastDate?fmtDisplay(p.lastDate):'-'}</b></span>
+      ${s.retired ? '' : `<span>Est. next: <b>${fmtDisplay(p.predicted)}</b></span>`}
+    </div>` : '';
   return `<div class="detail-panel">
+    ${statsRow}
     <div class="detail-row">
       <span>Release date: <b>${s.added?fmtDisplay(toUTC(s.added)):'-'}</b></span>
       <span>Status: <b>${s.retired?'Retired':'Active'}</b></span>
@@ -1359,6 +1480,8 @@ function render(){
 
   let html = '';
   html += `<div id="status-msg" class="status-msg"></div>`;
+
+  html += `<div class="view-row"><label class="merge-toggle" title="Switch between the PC and mobile layout"><span class="view-opt ${viewMode==='pc'?'on':''}">PC</span><input type="checkbox" ${viewMode==='mobile'?'checked':''} onchange="toggleViewMode()"><span class="switch"></span><span class="view-opt ${viewMode==='mobile'?'on':''}">Mobile</span></label></div>`;
 
   html += `<div class="top-bars">
   <div class="ref-bar">
@@ -1397,8 +1520,8 @@ function render(){
     sidebarHtml += `<div style="color:var(--cream-dim);font-size:var(--fs-4);padding:16px 0;">No active sets in data.json.</div>`;
   } else {
     sidebarHtml += `<div class="predict-grid">`;
-    sidebarHtml += slotCard('short', 'Rare slot', shortRanked);
-    sidebarHtml += slotCard('long', 'Uncommon slot', longRanked);
+    sidebarHtml += slotCard('short', 'Rare return', shortRanked, stats.shortMean);
+    sidebarHtml += slotCard('long', 'Uncommon return', longRanked, stats.longMean);
     sidebarHtml += `</div>`;
   }
   sidebarHtml += otherItemsHtml();
@@ -1421,9 +1544,6 @@ function render(){
     const startOffset = clamp(daysBetween(tlExt.min, dispMin), 0, totalDays);
     const endOffset = clamp(daysBetween(tlExt.min, dispMax), 0, totalDays);
     const startPct = startOffset/totalDays*100, endPct = endOffset/totalDays*100;
-
-    mainHtml += `<h2>Rotation timeline</h2>
-    <div class="hint" style="margin:-6px 0 14px;">Active sets first, newest release date on top; retired sets follow the divider, also newest release date first. Click a name for details.</div>`;
 
     mainHtml += `<div class="timeline-controls">
       <div class="control-row">
@@ -1477,24 +1597,21 @@ function render(){
             <div class="ps-line"><span class="ps-lbl">Sell</span>${coinHtml(allSell)}</div>
           </div>
           <div class="ps-col ps-col-cheapest">
-            <div class="ps-title">Cheapest</div>
-            ${cheapLine('Buy', cheapestBuy)}
-            ${cheapLine('Sell', cheapestSell)}
-          </div>
-          <div class="ps-col ps-col-cheapest">
-            <div class="ps-title">Cheapest avg</div>
-            ${cheapLine('Buy', cheapestAvgBuy)}
-            ${cheapLine('Sell', cheapestAvgSell)}
+            <div class="ps-title"><label class="merge-toggle ps-mode" title="Switch between cheapest total price and cheapest average price per skin"><span class="ps-opt ${priceMode==='total'?'on':''}">Cheapest</span><input type="checkbox" ${priceMode==='avg'?'checked':''} onchange="togglePriceMode()"><span class="switch"></span><span class="ps-opt ${priceMode==='avg'?'on':''}">avg</span></label></div>
+            ${priceMode==='avg' ? cheapLine('Buy', cheapestAvgBuy)+cheapLine('Sell', cheapestAvgSell) : cheapLine('Buy', cheapestBuy)+cheapLine('Sell', cheapestSell)}
           </div>
         </div>
       </div>`;
     }
 
-    mainHtml += `<div class="section-head"><div class="toggle-group"><label class="merge-toggle" title="Show retired sets in this list, sorted together with the active ones"><input type="checkbox" ${mergeRetired?'checked':''} ${retiredCount?'':'disabled'} onchange="toggleMerge()"><span class="switch"></span><span class="merge-label">Merge retired sets</span></label><label class="merge-toggle" title="Hide sets you have fully unlocked or checked off"><input type="checkbox" ${hideCompleted?'checked':''} onchange="toggleHideCompleted()"><span class="switch"></span><span class="merge-label">Hide completed sets</span></label></div></div>`;
+    const sortOpts = [['name','Set'],['type','Type'],['count','Count'],['last','Last seen'],['next','Est. next'],['likelihood','Likelihood']]
+      .concat(priceMode==='avg' ? [['avgBuy','Avg (buy)'],['avgSell','Avg (sell)']] : [['priceBuy','Price (buy)'],['priceSell','Price (sell)']]);
+    const sortMobileHtml = `<div class="sort-mobile"><select class="sort-select" onchange="setSortFromSelect(this.value)" aria-label="Sort by"><option value="" ${sortKey?'':'selected'}>Sort: default order</option>${sortOpts.map(o=>`<option value="${o[0]}" ${sortKey===o[0]?'selected':''}>Sort: ${o[1]}</option>`).join('')}</select><button onclick="flipSortDir()" ${sortKey?'':'disabled'} aria-label="Reverse sort order">${sortDir==='asc'?'&#9650;':'&#9660;'}</button></div>`;
+    mainHtml += `<div class="section-head"><div class="toggle-group"><label class="merge-toggle" title="Show retired sets in this list, sorted together with the active ones"><input type="checkbox" ${mergeRetired?'checked':''} ${retiredCount?'':'disabled'} onchange="toggleMerge()"><span class="switch"></span><span class="merge-label">Merge retired sets</span></label><label class="merge-toggle" title="Hide sets you have fully unlocked or checked off"><input type="checkbox" ${hideCompleted?'checked':''} onchange="toggleHideCompleted()"><span class="switch"></span><span class="merge-label">Hide completed sets</span></label></div>${sortMobileHtml}</div>`;
     mainHtml += `<table class="roster"><colgroup>
-      <col style="width:5%"><col style="width:18%"><col style="width:8%"><col style="width:9%"><col style="width:10%"><col style="width:10%"><col style="width:12%"><col style="width:14%"><col style="width:14%">
+      <col style="width:5%"><col style="width:22%"><col style="width:10%"><col style="width:12%"><col style="width:12%"><col style="width:16%"><col style="width:23%">
     </colgroup><thead><tr>
-      <th class="check-col"><button class="small" onclick="resetSort()" ${sortKey?'':'disabled'} title="Reset to default order" aria-label="Reset to default order">&#8634;</button></th>${sortTh('name','Set')}${sortTh('type','Type')}${sortTh('count','Count','num')}${sortTh('last','Last seen','num')}${sortTh('next','Est. next','num')}${sortTh('likelihood','Likelihood')}<th>Price (${sortOpt('priceBuy','Buy')} / ${sortOpt('priceSell','Sell')})</th><th>Avg (${sortOpt('avgBuy','Buy')} / ${sortOpt('avgSell','Sell')})</th>
+      <th class="check-col"><button class="small" onclick="resetSort()" ${sortKey?'':'disabled'} title="Reset to default order" aria-label="Reset to default order">&#8634;</button></th>${sortTh('name','Set')}${sortTh('type','Type')}${sortTh('last','Last seen','num')}${sortTh('next','Est. next','num')}${sortTh('likelihood','Likelihood')}${priceMode==='avg' ? `<th>Avg (${sortOpt('avgBuy','Buy')} / ${sortOpt('avgSell','Sell')})</th>` : `<th>Price (${sortOpt('priceBuy','Buy')} / ${sortOpt('priceSell','Sell')})</th>`}
     </tr></thead><tbody>`;
     // One row builder for both groups. Retired sets have no prediction, so
     // their vintage tag takes the Est. next + Likelihood cells.
@@ -1506,20 +1623,18 @@ function render(){
       const isCollected = isEffectivelyCollected(s.name);
       const checkAttrs = autoComplete ? 'disabled' : `onclick="toggleCollected('${escapeAttr(s.name)}', event)"`;
       const predCells = isRetired
-        ? `<td colspan="2">${vintageTag(s.vintage)}</td>`
-        : `<td class="num">${fmtDisplay(p.predicted)}</td>
-        <td><div class="pct-bar-wrap"><div class="pct-bar-track"><div class="pct-bar-fill type-${p.type}" style="width:${clamp(x.barPct,2,100)}%"></div></div><span class="pct-num type-${p.type}">${x.pct.toFixed(1)}%</span></div></td>`;
+        ? `<td colspan="2" class="c-vintage">${vintageTag(s.vintage)}</td>`
+        : `<td class="num c-next">${fmtDisplay(p.predicted)}</td>
+        <td class="c-like"><div class="pct-bar-wrap"><div class="pct-bar-track"><div class="pct-bar-fill type-${p.type}" style="width:${clamp(x.barPct,2,100)}%"></div></div><span class="pct-num type-${p.type}">${x.pct.toFixed(1)}%</span></div></td>`;
       return `<tr class="${isCollected?'is-collected':''}" data-set="${escapeHtml(s.name)}">
         <td class="check-col" ${autoComplete?'':`onclick="toggleCollected('${escapeAttr(s.name)}', event)"`}><input type="checkbox" class="collected-check" ${isCollected?'checked':''} ${checkAttrs} title="${autoComplete?'Fully unlocked on your account':'Mark as collected'}"></td>
         <td class="name" onclick="toggleExpand('${escapeAttr(s.name)}')">${escapeHtml(s.name)}${own?` <span class="owned-frac ${ownedFracClass(own)}">${own.owned}/${own.total}</span>`:''}</td>
-        <td>${typeTag(p.type)}</td>
-        <td class="num">${p.count}</td>
-        <td class="num">${p.lastDate?fmtDisplay(p.lastDate):'-'}</td>
+        <td class="c-type">${typeTag(p.type)}</td>
+        <td class="num c-last">${p.lastDate?fmtDisplay(p.lastDate):'-'}</td>
         ${predCells}
-        <td class="price">${priceCellHtml(s.name)}</td>
-        <td class="price">${avgCellHtml(s.name)}</td>
+        <td class="price c-price" ${priceMode==='avg'?'data-label="Avg"':''}>${priceMode==='avg' ? avgCellHtml(s.name) : priceCellHtml(s.name)}</td>
       </tr>
-      ${expandedName===s.name ? `<tr><td colspan="9">${renderDetailPanel(s,p)}</td></tr>` : ''}
+      ${expandedName===s.name ? `<tr class="detail-tr"><td colspan="7">${renderDetailPanel(s,p)}</td></tr>` : ''}
       `;
     };
     const retiredScored = sets.filter(s=>s.retired)
@@ -1538,7 +1653,7 @@ function render(){
       sortRows(activeScored).forEach(x=>{ mainHtml += rosterRow(x); });
       if(retiredCount){
         const vintageCount = sets.filter(s=>s.vintage).length;
-        mainHtml += `<tr class="retired-divider" onclick="toggleListRetired()" role="button" tabindex="0"><td colspan="9">
+        mainHtml += `<tr class="retired-divider" onclick="toggleListRetired()" role="button" tabindex="0"><td colspan="7">
           <span class="rd-title"><span class="divider-arrow">${listShowRetired ? '&#9662;' : '&#9656;'}</span>Retired sets</span>
           <span class="hint">${listShowRetired?`${vintageCount?`${vintageCount} have gone vintage`:''}`:'click to show'}</span>
         </td></tr>`;
@@ -1553,11 +1668,6 @@ function render(){
     <div class="main-col">${mainHtml}</div>
   </div>`;
 
-  html += `<div class="footnote" style="margin-top:24px;">
-    Each set's rotation slot - Uncommon or Rare - comes from the <code>"type"</code> field in <code>data.json</code> (<code>"long"</code>/<code>"short"</code> internally). Uncommon sets average ~${Math.round(stats.longMean)}d between appearances and Rare sets ~${Math.round(stats.shortMean)}d, both recomputed live from typed sets' actual gaps. Sets without a <code>"type"</code> in the file are treated as unknown and predicted using a blend of both, and are excluded from the slot rankings above since they can't be assigned to either. Appearances before 9 Nov 2021 predate the current system and are excluded from the gap statistics. Likelihood reflects how close the reference date is to each set's projected next appearance relative to its slot peers - it doesn't factor in how many times a set has already appeared toward its typical retirement, so use the appearance count to judge that yourself.
-    <br><br>
-    <code>data.json</code> is the only source of truth - this page is read-only and reloads it fresh (no caching) every time it loads or you hit "Refresh data.json". The only thing saved in your browser is the reference date above.
-  </div>`;
 
   document.getElementById('app').innerHTML = html;
   if(activeTab==='timeline' && tlExt){ attachRangeSliderHandlers(tlExt.min, tlExt.max); }
@@ -1682,7 +1792,7 @@ function updateSidebarSticky(reset){
   const delta = reset ? 0 : y - lastScrollY;
   lastScrollY = y;
   if(!sb) return;
-  if(!desktopMQ.matches){ sb.style.top = ''; sidebarTop = SIDEBAR_GAP; return; }
+  if(!desktopMQ.matches || viewMode==='mobile'){ sb.style.top = ''; sidebarTop = SIDEBAR_GAP; return; }
   const minTop = Math.min(SIDEBAR_GAP, window.innerHeight - sb.offsetHeight - SIDEBAR_GAP);
   sidebarTop = Math.max(minTop, Math.min(SIDEBAR_GAP, sidebarTop - delta));
   sb.style.top = sidebarTop + 'px';
