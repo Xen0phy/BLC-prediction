@@ -538,7 +538,7 @@ async function loadGlyphNames(){
   const ids = otherItemIds();
   if(!ids.length) return;
   try{
-    const res = await fetch(`https://api.guildwars2.com/v2/items?ids=${ids.join(',')}`);
+    const res = await fetch(`https://api.guildwars2.com/v2/items?ids=${ids.join(',')}&lang=en`);
     if(!res.ok) return;
     const out = {};
     (await res.json()).forEach(d=>{ out[d.id] = d.name; });
@@ -803,7 +803,7 @@ async function loadOwnershipSkinIds(){
     const chunkSize = 200; // /v2/items max ids per request
     for(let i=0;i<allItemIds.length;i+=chunkSize){
       const chunk = allItemIds.slice(i, i+chunkSize);
-      const res = await fetch(`https://api.guildwars2.com/v2/items?ids=${chunk.join(',')}`);
+      const res = await fetch(`https://api.guildwars2.com/v2/items?ids=${chunk.join(',')}&lang=en`);
       if(res.ok){
         const items = await res.json();
         items.forEach(it=>resolved.set(it.id, it.details?.skins || []));
@@ -813,7 +813,7 @@ async function loadOwnershipSkinIds(){
       // fall back to one-by-one so it doesn't blank out the rest.
       for(const id of chunk){
         try{
-          const r = await fetch(`https://api.guildwars2.com/v2/items/${id}`);
+          const r = await fetch(`https://api.guildwars2.com/v2/items/${id}?lang=en`);
           if(!r.ok) continue;
           const it = await r.json();
           resolved.set(it.id, it.details?.skins || []);
@@ -883,7 +883,7 @@ async function loadSkinDetails(){
     const chunkSize = 150;
     for(let i=0;i<allIds.length;i+=chunkSize){
       const chunk = allIds.slice(i, i+chunkSize);
-      const res = await fetch(`https://api.guildwars2.com/v2/skins?ids=${chunk.join(',')}`);
+      const res = await fetch(`https://api.guildwars2.com/v2/skins?ids=${chunk.join(',')}&lang=en`);
       if(!res.ok) continue;
       const data = await res.json();
       data.forEach(d=>{ result[d.id] = {name: d.name, icon: d.icon}; });
