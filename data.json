@@ -1040,7 +1040,8 @@
     "name": "Foefire",
     "added": "2024-11-05",
     "appearances": [
-      "2025-10-07"
+      "2025-10-07",
+      "2026-10-13"
     ],
     "retired": false,
     "type": "long",
@@ -1082,7 +1083,8 @@
     "name": "Calligrapher's",
     "added": "2025-11-18",
     "appearances": [
-      "2026-05-12"
+        "2026-05-12",
+        "2026-10-13"
     ],
     "retired": false,
     "type": "short",

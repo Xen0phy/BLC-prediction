@@ -1,9 +1,9 @@
 {
-  "asOf": "Shaded Threads (live from 29 Sep 2026)",
+  "asOf": "Calligrapher's Flow (live from 13 Oct 2026)",
   "last": {
-    "ore": "Platinum",
-    "wood": "Hard",
-    "slot": "Leather Rack"
+    "ore": "Orichalcum",
+    "wood": "Elder",
+    "slot": ""
   },
   "oreOrder": [
     "Orichalcum",
@@ -36,7 +36,7 @@
       "Snow Truffle"
     ]
   },
-  "orichalcumSinceSpecial": 1,
+  "orichalcumSinceSpecial": 2,
   "specialEvery": 6,
   "count": 1,
   "ids": {
