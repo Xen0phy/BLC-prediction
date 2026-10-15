@@ -1,11 +1,7 @@
 {
-  "name": "blc-rotation-predictor",
-  "private": true,
-  "scripts": {
-    "generate-readme": "node generate-readme.js",
-    "check-rotation": "node scripts/check-wiki-rotation.js"
-  },
-  "devDependencies": {
-    "jsdom": "^24.0.0"
+    "name": "blc-rotation-predictor",
+    "private": true,
+    "scripts": {
+      "check-rotation": "node scripts/check-wiki-rotation.js"
+    }
   }
-}

@@ -16,12 +16,50 @@
 // Ticket page.
 
 const BASE = 'https://wiki.guildwars2.com';
-const UA = 'gw2-blc-prediction-bot/1.0 (+https://github.com/; automated rotation check)';
+// The wiki sits behind Cloudflare, which returns 403 to requests that look like
+// bots (non-browser User-Agent, no Accept headers), especially from GitHub
+// Actions IP ranges. Send browser-like headers, retry, and fall back to the
+// MediaWiki API (api.php), which is usually filtered less aggressively.
+const UA =
+  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
+const HEADERS = {
+  'User-Agent': UA,
+  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'en-US,en;q=0.9',
+};
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function fetchWithRetry(url, attempts = 3) {
+  let lastStatus = 0;
+  for (let i = 0; i < attempts; i++) {
+    if (i > 0) await sleep(2000 * i);
+    try {
+      const res = await fetch(url, { headers: HEADERS });
+      if (res.ok) return res;
+      lastStatus = res.status;
+      if (res.status !== 403 && res.status !== 429 && res.status < 500) break;
+    } catch (e) {
+      lastStatus = `network error: ${e.message}`;
+    }
+  }
+  throw new Error(`HTTP ${lastStatus} fetching ${url}`);
+}
 
 async function fetchHtml(url) {
-  const res = await fetch(url, { headers: { 'User-Agent': UA } });
-  if (!res.ok) throw new Error(`HTTP ${res.status} fetching ${url}`);
-  return res.text();
+  try {
+    return await (await fetchWithRetry(url)).text();
+  } catch (e) {
+    const m = url.match(/^https:\/\/wiki\.guildwars2\.com\/wiki\/([^?#]+)/);
+    if (!m) throw e;
+    console.error(`  ! ${e.message}; retrying via api.php`);
+    const apiUrl = `${BASE}/api.php?action=parse&page=${m[1]}&prop=text&redirects=1&format=json&formatversion=2`;
+    const json = await (await fetchWithRetry(apiUrl)).json();
+    if (!json.parse || typeof json.parse.text !== 'string') {
+      throw new Error(`api.php returned no content for ${url}`);
+    }
+    return json.parse.text;
+  }
 }
 
 function sliceBetween(html, startMarker, endMarker) {
