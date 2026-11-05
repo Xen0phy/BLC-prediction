@@ -1073,7 +1073,7 @@
     "name": "Shade-Touched",
     "added": "2025-09-09",
     "appearances": [
-        "2026-09-29"
+      "2026-09-29"
     ],
     "retired": false,
     "type": "long",
@@ -1083,8 +1083,8 @@
     "name": "Calligrapher's",
     "added": "2025-11-18",
     "appearances": [
-        "2026-05-12",
-        "2026-10-13"
+      "2026-05-12",
+      "2026-10-13"
     ],
     "retired": false,
     "type": "short",
